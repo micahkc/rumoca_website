@@ -47,7 +47,7 @@ The simulation page can connect to a locally-running autopilot via a WebSocket-t
 Browser (WASM plant)  <--WebSocket-->  Proxy  <--UDP/FlatBuffers-->  Autopilot
 ```
 
-The proxy translates between JSON (WebSocket) and FlatBuffers (UDP) using the same `sil_config.toml` configuration as `rumoca_sil`. The proxy is located at `../development/drone_demo/rumoca_ws_proxy`.
+The proxy translates between JSON (WebSocket) and FlatBuffers (UDP) using a `sil_config.toml` file. The proxy is included in this repo at `rumoca_ws_proxy/`.
 
 ### Running it
 
@@ -55,7 +55,8 @@ The proxy translates between JSON (WebSocket) and FlatBuffers (UDP) using the sa
 
 2. Start the WebSocket-to-UDP proxy:
    ```bash
-   ~/Research/development/drone_demo/rumoca_ws_proxy/run.sh
+   cd rumoca_ws_proxy
+   ./run.sh /path/to/your/sil_config.toml
    ```
 
 3. Open the simulation page in your browser and select "Autopilot (SIL)" in the config panel
