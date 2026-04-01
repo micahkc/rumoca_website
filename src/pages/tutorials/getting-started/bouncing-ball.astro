@@ -1,0 +1,68 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Bouncing Ball"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Bouncing Ball' },
+  ]}
+  prev={{ label: 'Mass-Spring-Damper', href: '/tutorials/getting-started/mass-spring-damper' }}
+  next={{ label: 'Pendulum', href: '/tutorials/getting-started/pendulum' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    This example introduces nonlinear dynamics and event handling. A ball is dropped from height
+    <em>h</em> and bounces with a coefficient of restitution <em>e</em>. The Modelica
+    <code class="font-mono text-sm text-accent">when</code> clause triggers a velocity reversal at each bounce.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model BouncingBall
+  Real h(start = 1) "height";
+  Real v(start = 0) "velocity";
+  parameter Real g = 9.81 "gravity";
+  parameter Real e = 0.7 "coefficient of restitution";
+equation
+  der(h) = v;
+  der(v) = -g;
+  when h < 0 then
+    reinit(v, -e * pre(v));
+  end when;
+end BouncingBall;`}
+    modelName="BouncingBall"
+    tEnd={5}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  const floor = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.1, 8),
+    new THREE.MeshStandardMaterial({ color: 0x444444 })
+  );
+  floor.position.set(0, -0.05, 0);
+  state.scene.add(floor);
+  state.ball = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 32, 24),
+    new THREE.MeshStandardMaterial({ color: 0x3cb4ff })
+  );
+  state.scene.add(state.ball);
+};
+ctx.onFrame = (api) => {
+  const h = api.getValue("h", api.sampleIndex);
+  if (api.state.ball) api.state.ball.position.set(0, Number.isFinite(h) ? h : 0, 0);
+};`}
+  />
+
+  <p class="text-text-muted leading-relaxed mt-6">
+    Examine the DAE IR output to see how the <code class="font-mono text-sm text-accent">when</code> clause
+    maps to the event structure in the intermediate representation.
+  </p>
+</TutorialLayout>

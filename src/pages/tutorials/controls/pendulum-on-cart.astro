@@ -1,0 +1,103 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Pendulum on Cart"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Control Systems', href: '/tutorials' },
+    { label: 'Pendulum on Cart' },
+  ]}
+  prev={{ label: 'PID DC Motor', href: '/tutorials/controls/dc-motor-pid' }}
+  next={{ label: 'Quadrotor', href: '/tutorials/controls/quadrotor' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Classic inverted pendulum on a cart &mdash; a DAE system where cart and pendulum are coupled through
+    constraint forces. Starting slightly off vertical, the pendulum falls and oscillates. This is one of
+    the most studied systems in control theory and robotics.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model PendulumOnCart "Inverted pendulum on a cart"
+  parameter Real M = 1.0 "Cart mass (kg)";
+  parameter Real m = 0.3 "Pendulum mass (kg)";
+  parameter Real l = 0.5 "Pendulum length (m)";
+  parameter Real g = 9.81 "Gravitational acceleration (m/s^2)";
+  parameter Real F_ext = 0.0 "External force on cart (N)";
+  Real x(start = 0.0) "Cart position (m)";
+  Real dx "Cart velocity (m/s)";
+  Real theta(start = 0.1) "Pendulum angle from vertical (rad)";
+  Real dtheta "Pendulum angular velocity (rad/s)";
+  Real ddx "Cart acceleration";
+  Real ddtheta "Pendulum angular acceleration";
+equation
+  der(x) = dx;
+  der(theta) = dtheta;
+  der(dx) = ddx;
+  der(dtheta) = ddtheta;
+  (M + m) * ddx + m * l * ddtheta * cos(theta) - m * l * dtheta^2 * sin(theta) = F_ext;
+  m * l * ddx * cos(theta) + m * l^2 * ddtheta - m * g * l * sin(theta) = 0;
+end PendulumOnCart;`}
+    modelName="PendulumOnCart"
+    tEnd={5}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Rail
+  const rail = new THREE.Mesh(
+    new THREE.BoxGeometry(12, 0.04, 0.15),
+    new THREE.MeshStandardMaterial({ color: 0x555555 })
+  );
+  rail.position.y = 0.5;
+  state.scene.add(rail);
+  // Cart
+  state.cart = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.3, 0.4),
+    new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+  );
+  state.cart.position.y = 0.67;
+  state.scene.add(state.cart);
+  // Pendulum rod
+  state.rod = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0xcccccc, linewidth: 2 })
+  );
+  state.scene.add(state.rod);
+  // Pendulum bob
+  state.bob = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 24, 16),
+    new THREE.MeshStandardMaterial({ color: 0xef4444 })
+  );
+  state.scene.add(state.bob);
+  state.L = 0.5;
+  state.pivotY = 0.82;
+};
+ctx.onFrame = (api) => {
+  const xVal = api.getValue("x", api.sampleIndex);
+  const theta = api.getValue("theta", api.sampleIndex);
+  const cx = Number.isFinite(xVal) ? xVal : 0;
+  const th = Number.isFinite(theta) ? theta : 0;
+  const L = api.state.L * 3.0;
+  const pivotY = api.state.pivotY;
+  if (api.state.cart) api.state.cart.position.x = cx;
+  const bobX = cx + L * Math.sin(th);
+  const bobY = pivotY + L * Math.cos(th);
+  if (api.state.bob) api.state.bob.position.set(bobX, bobY, 0);
+  if (api.state.rod) {
+    api.state.rod.geometry.dispose();
+    api.state.rod.geometry = new api.THREE.BufferGeometry().setFromPoints([
+      new api.THREE.Vector3(cx, pivotY, 0),
+      new api.THREE.Vector3(bobX, bobY, 0),
+    ]);
+  }
+};`}
+  />
+</TutorialLayout>

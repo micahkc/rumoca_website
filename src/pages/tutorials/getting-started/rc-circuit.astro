@@ -1,0 +1,82 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="RC Circuit"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'RC Circuit' },
+  ]}
+  prev={{ label: 'Van der Pol', href: '/tutorials/getting-started/van-der-pol' }}
+  next={{ label: 'Series RLC', href: '/tutorials/getting-started/series-rlc' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    First-order RC circuit. The capacitor charges exponentially with time constant
+    &tau; = RC = 1ms. The voltage across the capacitor follows
+    <code class="font-mono text-sm text-accent">V<sub>c</sub>(t) = V<sub>0</sub>(1 &minus; e<sup>&minus;t/&tau;</sup>)</code>.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model RCCircuit "Simple RC circuit with step voltage input"
+  parameter Real R = 1000.0 "Resistance (Ohm)";
+  parameter Real C = 1e-6 "Capacitance (F)";
+  parameter Real V0 = 5.0 "Source voltage (V)";
+  Real Vc(start = 0.0) "Capacitor voltage";
+  Real i "Current";
+equation
+  i = C * der(Vc);
+  V0 = R * i + Vc;
+end RCCircuit;`}
+    modelName="RCCircuit"
+    tEnd={0.005}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Circuit board
+  const board = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 0.1, 2),
+    new THREE.MeshStandardMaterial({ color: 0x1a3a2a })
+  );
+  board.position.y = 0.05;
+  state.scene.add(board);
+  // Capacitor body
+  state.capMat = new THREE.MeshStandardMaterial({ color: 0x222244, emissive: 0x000022 });
+  state.cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 1.0, 32),
+    state.capMat
+  );
+  state.cap.position.set(0, 0.65, 0);
+  state.scene.add(state.cap);
+  // Capacitor leads
+  const leadMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+  const leadGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
+  const lead1 = new THREE.Mesh(leadGeo, leadMat);
+  lead1.position.set(-0.15, 0.15, 0);
+  state.scene.add(lead1);
+  const lead2 = new THREE.Mesh(leadGeo, leadMat);
+  lead2.position.set(0.15, 0.15, 0);
+  state.scene.add(lead2);
+  // Label
+  state.V0 = 5.0;
+};
+ctx.onFrame = (api) => {
+  const Vc = api.getValue("Vc", api.sampleIndex);
+  const v = Number.isFinite(Vc) ? Vc : 0;
+  const frac = Math.min(v / api.state.V0, 1.0);
+  if (api.state.capMat) {
+    const b = Math.floor(frac * 200);
+    api.state.capMat.emissive.setRGB(0, frac * 0.2, frac * 0.8);
+    api.state.capMat.emissiveIntensity = frac * 2.0;
+  }
+};`}
+  />
+</TutorialLayout>

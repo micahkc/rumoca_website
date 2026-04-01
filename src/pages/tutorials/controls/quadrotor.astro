@@ -1,0 +1,32 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+import { QUADROTOR_SIM_SOURCE } from '../../../data/models/quadrotor-sim';
+import { QUADROTOR_SIM_VIEWER_SCRIPT } from '../../../data/models/quadrotor-sim-viewer';
+---
+
+<TutorialLayout
+  title="Quadrotor Autopilot"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Control Systems', href: '/tutorials' },
+    { label: 'Quadrotor Autopilot' },
+  ]}
+  prev={{ label: 'Pendulum on Cart', href: '/tutorials/controls/pendulum-on-cart' }}
+  next={{ label: 'Optimal Control', href: '/tutorials/optimization/optimal-control' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    A closed-loop quadrotor with velocity-command autopilot. The model includes
+    6-DOF rigid body dynamics (quaternion representation), a cascaded velocity/attitude controller,
+    and a demo mission with climb, forward, lateral, yaw, and diagonal maneuvers.
+    16 ODE states, fully closed-loop with smooth RC ramp inputs.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={QUADROTOR_SIM_SOURCE}
+    modelName="AutopilotSim"
+    tEnd={10}
+    defaultScript={QUADROTOR_SIM_VIEWER_SCRIPT}
+  />
+</TutorialLayout>

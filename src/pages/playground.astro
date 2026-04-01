@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PlaygroundApp from '../components/playground/PlaygroundApp';
+---
+
+<BaseLayout title="Playground - Rumoca" description="Try the Rumoca Modelica compiler in your browser. No installation required." fullScreen={true}>
+  <PlaygroundApp client:only="react" />
+</BaseLayout>

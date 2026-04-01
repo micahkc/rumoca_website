@@ -1,0 +1,71 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Van der Pol Oscillator"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Van der Pol' },
+  ]}
+  prev={{ label: 'Pendulum', href: '/tutorials/getting-started/pendulum' }}
+  next={{ label: 'RC Circuit', href: '/tutorials/getting-started/rc-circuit' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The Van der Pol oscillator is a classic example of a nonlinear system exhibiting limit cycle behavior.
+    The parameter <em>&mu;</em> controls the nonlinearity &mdash; larger values produce more pronounced
+    relaxation oscillations.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model VanDerPol
+  Real x(start = 2);
+  Real y(start = 0);
+  parameter Real mu = 1.0;
+equation
+  der(x) = y;
+  der(y) = mu * (1 - x^2) * y - x;
+end VanDerPol;`}
+    modelName="VanDerPol"
+    tEnd={20}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 0.8);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(8, 16, 0x2f4f63, 0x2a2a2a));
+  // Phase-space tracer particle
+  state.particle = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 24, 16),
+    new THREE.MeshStandardMaterial({ color: 0xf0732e, emissive: 0xf0732e, emissiveIntensity: 0.3 })
+  );
+  state.scene.add(state.particle);
+  // Trail
+  state.trailPts = [];
+  state.trail = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x15b7e7, transparent: true, opacity: 0.7 })
+  );
+  state.scene.add(state.trail);
+};
+ctx.onFrame = (api) => {
+  const x = api.getValue("x", api.sampleIndex);
+  const y = api.getValue("y", api.sampleIndex);
+  const px = Number.isFinite(x) ? x : 0;
+  const py = Number.isFinite(y) ? y : 0;
+  if (api.state.particle) api.state.particle.position.set(px, 0.05, py);
+  const pts = api.state.trailPts;
+  pts.push(new api.THREE.Vector3(px, 0.02, py));
+  if (pts.length > 800) pts.shift();
+  if (api.state.trail) {
+    api.state.trail.geometry.dispose();
+    api.state.trail.geometry = new api.THREE.BufferGeometry().setFromPoints(pts);
+  }
+};`}
+  />
+</TutorialLayout>

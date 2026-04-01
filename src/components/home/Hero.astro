@@ -1,0 +1,103 @@
+---
+---
+
+<section class="relative overflow-hidden py-24 sm:py-32">
+  <div class="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent pointer-events-none"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <img
+      src="/images/rumoca.svg"
+      alt="Rumoca logo"
+      class="mx-auto mb-8 w-32 h-32 sm:w-40 sm:h-40"
+    />
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+      <span class="text-text">Modelica as a</span>
+      <br />
+      <span class="bg-gradient-to-r from-accent to-teal bg-clip-text text-transparent">
+        Universal Symbolic Frontend
+      </span>
+    </h1>
+
+    <p class="mt-6 max-w-3xl mx-auto text-lg sm:text-xl text-text-muted leading-relaxed">
+      Rumoca turns Modelica package trees into modern symbolic systems.
+      Open source. Written in Rust. Runs in your browser.
+    </p>
+
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a
+        href="https://rumoca.cognipilot.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center px-8 py-3 rounded-lg bg-accent hover:bg-accent-hover text-white font-semibold text-lg transition-colors shadow-lg shadow-accent/25"
+      >
+        Try in Browser
+      </a>
+      <a
+        href="https://github.com/CogniPilot/rumoca"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center px-8 py-3 rounded-lg border border-border text-text font-semibold text-lg hover:bg-surface transition-colors"
+      >
+        Get Started
+      </a>
+    </div>
+
+    <div class="mt-16 max-w-4xl mx-auto">
+      <div class="flex flex-wrap items-center justify-center gap-3 text-sm font-mono mb-4">
+        <span class="px-4 py-2 rounded-lg bg-surface border border-border text-text font-medium">Modelica</span>
+        <span class="text-text-muted">&rarr;</span>
+        <span class="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 text-accent font-semibold">Rumoca</span>
+        <span class="text-text-muted">&rarr;</span>
+        <div class="relative w-20 h-10 flex items-center justify-center" id="rotating-backend">
+          {[
+            { name: 'CasADi', logo: '/images/logos/casadi.svg' },
+            { name: 'SymPy', logo: '/images/logos/sympy.svg' },
+            { name: 'JAX', logo: '/images/logos/jax.svg' },
+            { name: 'Julia', logo: '/images/logos/julia.svg' },
+            { name: 'FMI', logo: '/images/logos/fmi.svg' },
+            { name: 'Embedded C', logo: '/images/logos/c.svg' },
+          ].map((backend, i) => (
+            <img
+              src={backend.logo}
+              alt={`${backend.name} logo`}
+              class:list={[
+                'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-full max-h-full object-contain transition-opacity duration-500 backend-logo',
+                i === 0 ? 'opacity-100' : 'opacity-0'
+              ]}
+              data-index={i}
+            />
+          ))}
+        </div>
+      </div>
+      <p class="text-xs font-mono text-text-muted mb-6">supported backends</p>
+      <div class="flex items-center justify-center gap-8 sm:gap-12">
+        {[
+          { name: 'CasADi', logo: '/images/logos/casadi.svg' },
+          { name: 'SymPy', logo: '/images/logos/sympy.svg' },
+          { name: 'JAX', logo: '/images/logos/jax.svg' },
+          { name: 'Julia', logo: '/images/logos/julia.svg' },
+          { name: 'FMI', logo: '/images/logos/fmi.svg' },
+          { name: 'Embedded C', logo: '/images/logos/c.svg' },
+        ].map((backend) => (
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-12 h-12 flex items-center justify-center">
+              <img src={backend.logo} alt={`${backend.name} logo`} class="max-w-full max-h-full object-contain" />
+            </div>
+            <span class="text-xs font-mono text-text-muted">{backend.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const logos = document.querySelectorAll('.backend-logo');
+  let current = 0;
+  setInterval(() => {
+    logos[current].classList.replace('opacity-100', 'opacity-0');
+    current = (current + 1) % logos.length;
+    logos[current].classList.replace('opacity-0', 'opacity-100');
+  }, 2000);
+</script>
+

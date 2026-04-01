@@ -1,0 +1,106 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Your First Model"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Your First Model' },
+  ]}
+  next={{ label: 'Mass-Spring-Damper', href: '/tutorials/getting-started/mass-spring-damper' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Welcome to Rumoca. In this tutorial you will write a Modelica model, compile it, and simulate it
+    &mdash; all in your browser. No install required.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    We will start with the <strong class="text-text">double integrator</strong> &mdash; the simplest second-order
+    ODE. A constant acceleration <em>a</em> drives velocity <em>v</em>, which drives position <em>x</em>:
+  </p>
+
+  <div class="p-4 rounded-lg bg-surface border border-border font-mono text-sm text-text-muted mb-6">
+    dx/dt = v<br/>
+    dv/dt = a
+  </div>
+
+  <h2 class="text-xl font-semibold text-text mb-3">Try it</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The editor below contains a complete Modelica model. Click <strong class="text-text">Compile</strong> to
+    parse it, then <strong class="text-text">Simulate</strong> to run 5 seconds of integration. Toggle variables
+    in the plot legend to explore the results.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model DoubleIntegrator "Double integrator (constant acceleration)"
+  parameter Real a = 1.0 "Constant acceleration (m/s^2)";
+  Real x(start = 0.0) "Position (m)";
+  Real v(start = 0.0) "Velocity (m/s)";
+equation
+  der(x) = v;
+  der(v) = a;
+end DoubleIntegrator;`}
+    modelName="DoubleIntegrator"
+    tEnd={5}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Floor
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, 14),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a2e, side: THREE.DoubleSide })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.01;
+  state.scene.add(floor);
+  // Sphere
+  state.sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 32, 24),
+    new THREE.MeshStandardMaterial({ color: 0x38bdf8 })
+  );
+  state.sphere.position.y = 0.2;
+  state.scene.add(state.sphere);
+  // Trail
+  state.trailPoints = [];
+  state.trail = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.5 })
+  );
+  state.scene.add(state.trail);
+};
+ctx.onFrame = (api) => {
+  const x = api.getValue("x", api.sampleIndex);
+  const pos = Number.isFinite(x) ? x * 0.4 : 0;
+  if (api.state.sphere) {
+    api.state.sphere.position.x = pos;
+    api.state.trailPoints.push(new api.THREE.Vector3(pos, 0.2, 0));
+    if (api.state.trailPoints.length > 500) api.state.trailPoints.shift();
+    api.state.trail.geometry.dispose();
+    api.state.trail.geometry = new api.THREE.BufferGeometry().setFromPoints(api.state.trailPoints);
+  }
+};`}
+  />
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">What just happened?</h2>
+  <ol class="list-decimal list-inside text-text-muted leading-relaxed space-y-2 mb-6">
+    <li><strong class="text-text">Compile</strong> &mdash; Rumoca parsed the Modelica source and produced a DAE intermediate representation (try switching the backend dropdown to see different output formats).</li>
+    <li><strong class="text-text">Simulate</strong> &mdash; The ODE was integrated in your browser using WebAssembly. No server round-trip.</li>
+    <li><strong class="text-text">Plot</strong> &mdash; State trajectories are plotted over time. Position <em>x</em> grows quadratically; velocity <em>v</em> grows linearly.</li>
+    <li><strong class="text-text">3D Viewer</strong> &mdash; Switch to the 3D tab to see the sphere accelerating along the floor.</li>
+  </ol>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    This is the core Rumoca workflow: <strong class="text-text">write &rarr; compile &rarr; simulate &rarr; visualize</strong>.
+    Every tutorial that follows builds on this foundation with more complex models and additional features
+    like CasADi code generation, symbolic analysis, and 3D visualization.
+  </p>
+</TutorialLayout>

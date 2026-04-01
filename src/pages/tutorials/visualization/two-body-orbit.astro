@@ -1,0 +1,272 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Two-Body Orbit"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: '3D Visualization', href: '/tutorials' },
+    { label: 'Two-Body Orbit' },
+  ]}
+  prev={{ label: 'Bouncing Ball 3D', href: '/tutorials/visualization/bouncing-ball-3d' }}
+  next={{ label: 'Circuit Components', href: '/tutorials/visualization/circuit-components' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Keplerian two-body orbit. A rocket in ~400&nbsp;km circular orbit around Earth.
+    The gravitational inverse-square law produces elliptical motion with units in km and km/s
+    for numerical stability. Initial conditions are set for a near-circular low-Earth orbit
+    with one period of approximately 5600&nbsp;seconds.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model TwoBodyOrbit "Two-body orbital mechanics (km, km/s)"
+  parameter Real mu = 3.986004418e5 "Earth gravitational parameter (km^3/s^2)";
+  Real x(start = 6778) "Position x (km)";
+  Real y(start = 0.0) "Position y (km)";
+  Real z(start = 0.0) "Position z (km)";
+  Real vx(start = 0.0) "Velocity x (km/s)";
+  Real vy(start = 7.669) "Velocity y (km/s)";
+  Real vz(start = 0.0) "Velocity z (km/s)";
+equation
+  der(x) = vx;
+  der(y) = vy;
+  der(z) = vz;
+  der(vx) = -mu * x / (x^2 + y^2 + z^2)^1.5;
+  der(vy) = -mu * y / (x^2 + y^2 + z^2)^1.5;
+  der(vz) = -mu * z / (x^2 + y^2 + z^2)^1.5;
+end TwoBodyOrbit;`}
+    modelName="TwoBodyOrbit"
+    tEnd={5600}
+    defaultSolver="rk-like"
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+
+  // Dark space background
+  state.scene.background = new THREE.Color(0x020210);
+
+  // Lighting: sunlight from one side, soft ambient fill
+  const sun = new THREE.DirectionalLight(0xffeedd, 1.2);
+  sun.position.set(5, 3, 4);
+  state.scene.add(sun);
+  state.scene.add(new THREE.AmbientLight(0x334466, 0.6));
+
+  // Scale: 1 unit ~ Earth radius
+  const Re = 6371;
+  state.scale = 1 / Re;
+
+  // --- Stars ---
+  const starCount = 600;
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i++) {
+    starPos[i] = (Math.random() - 0.5) * 40;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.03 }));
+  state.scene.add(stars);
+
+  // --- Earth with procedural land/ocean texture ---
+  const earthSize = 128;
+  const earthCanvas = document.createElement('canvas');
+  earthCanvas.width = earthSize * 2;
+  earthCanvas.height = earthSize;
+  const ectx = earthCanvas.getContext('2d');
+
+  // Ocean base
+  ectx.fillStyle = '#1a4488';
+  ectx.fillRect(0, 0, earthCanvas.width, earthCanvas.height);
+
+  // Polar ice caps
+  ectx.fillStyle = '#ddeeff';
+  ectx.fillRect(0, 0, earthCanvas.width, 12);
+  ectx.fillRect(0, earthCanvas.height - 12, earthCanvas.width, 12);
+
+  // Procedural landmasses using overlapping ellipses
+  const lands = [
+    // Rough continent shapes (x, y, w, h, angle)
+    { x: 80, y: 35, w: 30, h: 35, c: '#2d6b2e' },   // Europe/Africa-ish
+    { x: 75, y: 25, w: 22, h: 15, c: '#3a7d3a' },    // Europe
+    { x: 85, y: 55, w: 20, h: 25, c: '#357a35' },    // Africa
+    { x: 120, y: 35, w: 40, h: 30, c: '#2e6e2e' },   // Asia
+    { x: 140, y: 25, w: 18, h: 12, c: '#3b7d3b' },   // Siberia
+    { x: 200, y: 60, w: 25, h: 18, c: '#4a8a3a' },   // N America
+    { x: 210, y: 75, w: 8, h: 20, c: '#3d7d3d' },    // Central America
+    { x: 215, y: 85, w: 18, h: 22, c: '#2e7a2e' },   // S America
+    { x: 155, y: 80, w: 20, h: 15, c: '#5a9a4a' },   // Australia
+    { x: 110, y: 30, w: 15, h: 10, c: '#3a7a3a' },   // Middle East
+    { x: 65, y: 20, w: 8, h: 6, c: '#4a8a4a' },      // UK/Scandinavia
+  ];
+
+  for (const l of lands) {
+    ectx.save();
+    ectx.translate(l.x, l.y);
+    ectx.fillStyle = l.c;
+    ectx.beginPath();
+    ectx.ellipse(0, 0, l.w, l.h, 0, 0, Math.PI * 2);
+    ectx.fill();
+    // Add some terrain variation
+    for (let j = 0; j < 3; j++) {
+      ectx.fillStyle = j % 2 === 0 ? '#3a8a3a' : '#2a6a2a';
+      ectx.beginPath();
+      ectx.ellipse(
+        (Math.random() - 0.5) * l.w,
+        (Math.random() - 0.5) * l.h,
+        l.w * (0.3 + Math.random() * 0.3),
+        l.h * (0.3 + Math.random() * 0.3),
+        0, 0, Math.PI * 2
+      );
+      ectx.fill();
+    }
+    ectx.restore();
+  }
+
+  const earthTex = new THREE.CanvasTexture(earthCanvas);
+  const earthGeo = new THREE.SphereGeometry(1.0, 64, 48);
+  const earthMat = new THREE.MeshStandardMaterial({
+    map: earthTex,
+    roughness: 0.8,
+    metalness: 0.1,
+  });
+  state.earth = new THREE.Mesh(earthGeo, earthMat);
+  state.scene.add(state.earth);
+
+  // Atmosphere glow (slightly larger transparent sphere)
+  const atmosGeo = new THREE.SphereGeometry(1.03, 64, 48);
+  const atmosMat = new THREE.MeshStandardMaterial({
+    color: 0x88bbff,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.FrontSide,
+  });
+  state.scene.add(new THREE.Mesh(atmosGeo, atmosMat));
+
+  // --- Rocket ship ---
+  const rocketGroup = new THREE.Group();
+
+  // Body (cylinder)
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.025, 0.12, 12),
+    new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.4, roughness: 0.3 })
+  );
+  rocketGroup.add(body);
+
+  // Nose cone
+  const nose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.02, 0.05, 12),
+    new THREE.MeshStandardMaterial({ color: 0xff3333, metalness: 0.3, roughness: 0.4 })
+  );
+  nose.position.y = 0.085;
+  rocketGroup.add(nose);
+
+  // Engine nozzle
+  const nozzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.015, 0.03, 12),
+    new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.6, roughness: 0.3 })
+  );
+  nozzle.position.y = -0.075;
+  rocketGroup.add(nozzle);
+
+  // Engine flame
+  const flame = new THREE.Mesh(
+    new THREE.ConeGeometry(0.015, 0.06, 8),
+    new THREE.MeshStandardMaterial({
+      color: 0xff8800,
+      emissive: 0xff4400,
+      emissiveIntensity: 2.0,
+      transparent: true,
+      opacity: 0.8,
+    })
+  );
+  flame.position.y = -0.12;
+  flame.rotation.x = Math.PI;
+  rocketGroup.add(flame);
+  state.flame = flame;
+
+  // Fins (4 small triangular fins)
+  for (let i = 0; i < 4; i++) {
+    const finShape = new THREE.Shape();
+    finShape.moveTo(0, 0);
+    finShape.lineTo(0.03, 0);
+    finShape.lineTo(0, 0.05);
+    finShape.closePath();
+    const fin = new THREE.Mesh(
+      new THREE.ShapeGeometry(finShape),
+      new THREE.MeshStandardMaterial({ color: 0xff3333, side: THREE.DoubleSide })
+    );
+    fin.position.y = -0.06;
+    fin.rotation.y = (i * Math.PI) / 2;
+    fin.position.x = Math.cos((i * Math.PI) / 2) * 0.02;
+    fin.position.z = Math.sin((i * Math.PI) / 2) * 0.02;
+    rocketGroup.add(fin);
+  }
+
+  state.rocket = rocketGroup;
+  state.scene.add(rocketGroup);
+
+  // --- Orbit trail ---
+  state.trailPoints = [];
+  state.trail = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.5 })
+  );
+  state.scene.add(state.trail);
+
+  // Store previous position for orientation
+  state.prevPos = null;
+};
+
+ctx.onFrame = (api) => {
+  const { THREE, state } = api;
+  const x = api.getValue("x", api.sampleIndex);
+  const y = api.getValue("y", api.sampleIndex);
+  const z = api.getValue("z", api.sampleIndex);
+  const s = state.scale;
+
+  const px = Number.isFinite(x) ? x * s : 0;
+  const py = Number.isFinite(z) ? z * s : 0;
+  const pz = Number.isFinite(y) ? y * s : 0;
+
+  if (state.rocket) {
+    state.rocket.position.set(px, py, pz);
+
+    // Orient rocket along velocity (tangent to orbit)
+    if (state.prevPos) {
+      const dir = new THREE.Vector3(
+        px - state.prevPos.x,
+        py - state.prevPos.y,
+        pz - state.prevPos.z
+      );
+      if (dir.length() > 1e-6) {
+        dir.normalize();
+        // Rocket's "forward" is +Y, so align +Y with velocity direction
+        const up = new THREE.Vector3(0, 1, 0);
+        const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
+        state.rocket.quaternion.copy(quat);
+      }
+    }
+    state.prevPos = new THREE.Vector3(px, py, pz);
+
+    // Flicker the flame
+    if (state.flame) {
+      const flicker = 0.7 + Math.random() * 0.3;
+      state.flame.scale.set(flicker, 0.8 + Math.random() * 0.4, flicker);
+    }
+
+    // Orbit trail
+    state.trailPoints.push(new THREE.Vector3(px, py, pz));
+    if (state.trailPoints.length > 2000) state.trailPoints.shift();
+    state.trail.geometry.dispose();
+    state.trail.geometry = new THREE.BufferGeometry().setFromPoints(state.trailPoints);
+  }
+
+  // Slowly rotate Earth
+  if (state.earth) {
+    state.earth.rotation.y += 0.002;
+  }
+};`}
+  />
+</TutorialLayout>

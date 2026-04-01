@@ -1,0 +1,87 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="PID-Controlled DC Motor"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Control Systems', href: '/tutorials' },
+    { label: 'PID DC Motor' },
+  ]}
+  prev={{ label: 'FMU Export', href: '/tutorials/workflows/fmu-export' }}
+  next={{ label: 'Pendulum on Cart', href: '/tutorials/controls/pendulum-on-cart' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    A control systems workflow end to end: define the plant (DC motor), add a PID controller,
+    compile to CasADi, and simulate the closed-loop response. The motor tracks a step reference
+    in angular velocity.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model DCMotorPID
+  Real omega(start = 0);
+  Real i(start = 0);
+  Real e_int(start = 0);
+  parameter Real R = 1.0, L = 0.01;
+  parameter Real Kt = 0.01, Ke = 0.01;
+  parameter Real J = 0.01, b = 0.1;
+  parameter Real omega_ref = 100;
+  parameter Real Kp = 10, Ki = 50, Kd = 0.1;
+  Real error, V;
+equation
+  error = omega_ref - omega;
+  der(e_int) = error;
+  V = Kp * error + Ki * e_int + Kd * der(error);
+  L * der(i) = V - R * i - Ke * omega;
+  J * der(omega) = Kt * i - b * omega;
+end DCMotorPID;`}
+    modelName="DCMotorPID"
+    tEnd={2}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(3, 4, 2);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(8, 16, 0x2f4f63, 0x2a2a2a));
+  // Motor housing
+  const housing = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.4, 0.4, 0.8, 32),
+    new THREE.MeshStandardMaterial({ color: 0x555555 })
+  );
+  housing.position.set(0, 0.5, 0);
+  state.scene.add(housing);
+  // Shaft
+  state.shaft = new THREE.Group();
+  state.shaft.position.set(0, 1.0, 0);
+  const rod = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 0.6, 12),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc })
+  );
+  rod.rotation.z = Math.PI / 2;
+  rod.position.x = 0.3;
+  state.shaft.add(rod);
+  // Indicator arm
+  const arm = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 0.05, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xf0732e })
+  );
+  arm.position.x = 0.4;
+  state.shaft.add(arm);
+  state.scene.add(state.shaft);
+  state.angle = 0;
+};
+ctx.onFrame = (api) => {
+  const omega = api.getValue("omega", api.sampleIndex);
+  const dt = api.times[1] - api.times[0];
+  const w = Number.isFinite(omega) ? omega : 0;
+  // Integrate angular velocity for visual rotation
+  api.state.angle = (api.state.angle || 0) + w * dt;
+  if (api.state.shaft) api.state.shaft.rotation.y = api.state.angle * 0.01;
+};`}
+  />
+</TutorialLayout>

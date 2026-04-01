@@ -1,0 +1,84 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Series RLC Circuit"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Series RLC' },
+  ]}
+  prev={{ label: 'RC Circuit', href: '/tutorials/getting-started/rc-circuit' }}
+  next={{ label: 'Bouncing Ball 3D', href: '/tutorials/visualization/bouncing-ball-3d' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Second-order RLC circuit exhibiting underdamped oscillation. Current and voltage ring as energy
+    sloshes between inductor and capacitor. The 3D view shows the
+    <code class="font-mono text-sm text-accent">i<sub>L</sub></code> vs
+    <code class="font-mono text-sm text-accent">V<sub>c</sub></code> phase portrait.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model SeriesRLC "Series RLC circuit with step voltage"
+  parameter Real R = 10.0 "Resistance (Ohm)";
+  parameter Real L = 0.1 "Inductance (H)";
+  parameter Real C = 1e-3 "Capacitance (F)";
+  parameter Real V0 = 10.0 "Source voltage (V)";
+  Real iL(start = 0.0) "Inductor current (A)";
+  Real Vc(start = 0.0) "Capacitor voltage (V)";
+equation
+  L * der(iL) = V0 - R * iL - Vc;
+  C * der(Vc) = iL;
+end SeriesRLC;`}
+    modelName="SeriesRLC"
+    tEnd={0.5}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Phase plane
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), planeMat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.y = 0.0;
+  state.scene.add(plane);
+  // Particle
+  state.particle = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 24, 16),
+    new THREE.MeshStandardMaterial({ color: 0xffa500 })
+  );
+  state.particle.position.y = 0.1;
+  state.scene.add(state.particle);
+  // Trail
+  state.trailPoints = [];
+  state.trail = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.7 })
+  );
+  state.scene.add(state.trail);
+  state.scaleI = 3.0;
+  state.scaleV = 0.4;
+};
+ctx.onFrame = (api) => {
+  const iL = api.getValue("iL", api.sampleIndex);
+  const Vc = api.getValue("Vc", api.sampleIndex);
+  const ix = Number.isFinite(iL) ? iL * api.state.scaleI : 0;
+  const vz = Number.isFinite(Vc) ? Vc * api.state.scaleV : 0;
+  if (api.state.particle) {
+    api.state.particle.position.x = ix;
+    api.state.particle.position.z = vz;
+    api.state.trailPoints.push(new api.THREE.Vector3(ix, 0.05, vz));
+    if (api.state.trailPoints.length > 1000) api.state.trailPoints.shift();
+    api.state.trail.geometry.dispose();
+    api.state.trail.geometry = new api.THREE.BufferGeometry().setFromPoints(api.state.trailPoints);
+  }
+};`}
+  />
+</TutorialLayout>

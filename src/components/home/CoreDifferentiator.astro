@@ -1,0 +1,51 @@
+---
+---
+
+<section class="py-20 border-t border-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl sm:text-4xl font-bold text-text text-center mb-4">
+      Your model belongs to you, not your toolchain.
+    </h2>
+    <p class="text-text-muted text-center max-w-2xl mx-auto mb-16">
+      Write physics once, use it everywhere.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-12 items-start">
+      <div class="space-y-4">
+        <p class="text-text-muted leading-relaxed">
+          There is a large ecosystem of useful engineering models already written in Modelica, but many modern workflows live elsewhere &mdash; Julia / SciML, Python / JAX / CasADi / PyTorch, embedded targets, and browser workflows via WASM.
+        </p>
+        <p class="text-text-muted leading-relaxed">
+          Rumoca bridges that gap by treating Modelica as a <span class="text-text font-medium">semantic frontend</span> and compiling models into rich intermediate forms suitable for robust simulation, symbolic analysis, optimization, differentiable workflows, and multi-backend code generation.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="rounded-lg bg-code-bg border border-border overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-white/5">
+            <span class="text-xs font-mono text-accent">Modelica</span>
+          </div>
+          <pre class="p-4 text-sm font-mono text-code-text overflow-x-auto"><code><span class="text-accent">model</span> MassSpringDamper
+  <span class="text-amber-300">Real</span> x(start = <span class="text-emerald-400">1</span>);
+  <span class="text-amber-300">Real</span> v(start = <span class="text-emerald-400">0</span>);
+  <span class="text-amber-300">parameter Real</span> k = <span class="text-emerald-400">1</span>, c = <span class="text-emerald-400">0.1</span>, m = <span class="text-emerald-400">1</span>;
+<span class="text-accent">equation</span>
+  <span class="text-sky-300">der</span>(x) = v;
+  m * <span class="text-sky-300">der</span>(v) = -k * x - c * v;
+<span class="text-accent">end</span> MassSpringDamper;</code></pre>
+        </div>
+
+        <div class="rounded-lg bg-code-bg border border-border overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-white/5">
+            <span class="text-xs font-mono text-emerald-400">CasADi (Python)</span>
+          </div>
+          <pre class="p-4 text-sm font-mono text-code-text overflow-x-auto"><code>x = ca.MX.sym(<span class="text-amber-300">'x'</span>, <span class="text-emerald-400">2</span>)
+p = ca.MX.sym(<span class="text-amber-300">'p'</span>, <span class="text-emerald-400">3</span>)
+ode = ca.vertcat(x[<span class="text-emerald-400">1</span>],
+  (-p[<span class="text-emerald-400">0</span>]*x[<span class="text-emerald-400">0</span>] - p[<span class="text-emerald-400">1</span>]*x[<span class="text-emerald-400">1</span>]) / p[<span class="text-emerald-400">2</span>])
+f = ca.Function(<span class="text-amber-300">'f'</span>, [x, p], [ode])</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

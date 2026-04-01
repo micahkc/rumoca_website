@@ -1,0 +1,127 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  breadcrumbs: { label: string; href?: string }[];
+  prev?: { label: string; href: string };
+  next?: { label: string; href: string };
+}
+
+const { title, breadcrumbs, prev, next } = Astro.props;
+
+const sections = [
+  {
+    label: 'Getting Started',
+    items: [
+      { href: '/tutorials/getting-started/first-model', label: 'Your First Model' },
+      { href: '/tutorials/getting-started/mass-spring-damper', label: 'Mass-Spring-Damper' },
+      { href: '/tutorials/getting-started/bouncing-ball', label: 'Bouncing Ball' },
+      { href: '/tutorials/getting-started/pendulum', label: 'Pendulum' },
+      { href: '/tutorials/getting-started/van-der-pol', label: 'Van der Pol' },
+      { href: '/tutorials/getting-started/rc-circuit', label: 'RC Circuit' },
+      { href: '/tutorials/getting-started/series-rlc', label: 'Series RLC Circuit' },
+    ],
+  },
+  {
+    label: '3D Visualization',
+    items: [
+      { href: '/tutorials/visualization/bouncing-ball-3d', label: 'Bouncing Ball 3D' },
+      { href: '/tutorials/visualization/two-body-orbit', label: 'Two-Body Orbit' },
+      { href: '/tutorials/visualization/circuit-components', label: 'Circuit Components' },
+    ],
+  },
+  {
+    label: 'Code Generation Workflows',
+    items: [
+      { href: '/tutorials/workflows/casadi', label: 'Simulation with CasADi' },
+      { href: '/tutorials/workflows/sympy-bode', label: 'SymPy & Bode Plots' },
+      { href: '/tutorials/workflows/custom-templates', label: 'Custom Jinja Templates' },
+      { href: '/tutorials/workflows/fmu-export', label: 'FMU Export for MATLAB' },
+    ],
+  },
+  {
+    label: 'Control Systems',
+    items: [
+      { href: '/tutorials/controls/dc-motor-pid', label: 'PID DC Motor' },
+      { href: '/tutorials/controls/pendulum-on-cart', label: 'Pendulum on Cart' },
+      { href: '/tutorials/controls/quadrotor', label: 'Quadrotor Autopilot' },
+    ],
+  },
+  {
+    label: 'Optimization & MPC',
+    items: [
+      { href: '/tutorials/optimization/optimal-control', label: 'Optimal Control Intro' },
+      { href: '/tutorials/optimization/pendulum-swingup', label: 'Pendulum Swing-Up' },
+      { href: '/tutorials/optimization/mpc-quadrotor', label: 'MPC: Quadrotor' },
+      { href: '/tutorials/optimization/mpc-fixed-wing', label: 'MPC: Fixed-Wing Aircraft' },
+    ],
+  },
+];
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<BaseLayout title={`${title} - Tutorials - Rumoca`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumbs -->
+    <nav class="mb-8 text-sm text-text-muted">
+      {breadcrumbs.map((crumb, i) => (
+        <>
+          {i > 0 && <span class="mx-2">/</span>}
+          {crumb.href ? (
+            <a href={crumb.href} class="text-teal hover:text-accent transition-colors">{crumb.label}</a>
+          ) : (
+            <span class="text-text font-medium">{crumb.label}</span>
+          )}
+        </>
+      ))}
+    </nav>
+
+    <div class="flex gap-12">
+      <!-- Sidebar -->
+      <nav class="hidden lg:block w-56 shrink-0">
+        <div class="sticky top-24 space-y-6">
+          {sections.map((section) => (
+            <div>
+              <div class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{section.label}</div>
+              <div class="space-y-0.5">
+                {section.items.map(({ href, label }) => (
+                  <a
+                    href={href}
+                    class:list={[
+                      'block px-3 py-1.5 rounded-lg text-sm transition-colors',
+                      currentPath === href
+                        ? 'text-accent bg-accent/10 font-medium'
+                        : 'text-text-muted hover:text-text hover:bg-surface',
+                    ]}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <!-- Content -->
+      <div class="flex-1 min-w-0 max-w-3xl">
+        <h1 class="text-3xl font-bold text-text mb-8">{title}</h1>
+        <slot />
+
+        <!-- Prev/Next -->
+        {(prev || next) && (
+          <div class="mt-16 pt-8 border-t border-border flex items-center justify-between">
+            {prev ? (
+              <a href={prev.href} class="text-sm text-teal hover:text-accent transition-colors">&larr; {prev.label}</a>
+            ) : <div />}
+            {next ? (
+              <a href={next.href} class="text-sm text-teal hover:text-accent transition-colors">{next.label} &rarr;</a>
+            ) : <div />}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

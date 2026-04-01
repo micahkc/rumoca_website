@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About - Rumoca" description="Why we built Rumoca, who contributes, and how it fits into the Modelica ecosystem.">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <h1 class="text-4xl font-bold text-text mb-12">About Rumoca</h1>
+
+    <section class="space-y-6 mb-16">
+      <h2 class="text-2xl font-semibold text-text">Why We Built Rumoca</h2>
+      <p class="text-text-muted leading-relaxed">
+        Rumoca is a modern Modelica compiler and symbolic interoperability platform. Its goal is not only to compile and simulate Modelica models, but to turn real Modelica package trees into high-quality symbolic systems that can be used across modern scientific computing, optimization, machine learning, and code generation workflows.
+      </p>
+      <p class="text-text-muted leading-relaxed">
+        There is a large ecosystem of useful engineering models already written in Modelica, but many modern workflows live elsewhere &mdash; Julia / SciML, Python / JAX / CasADi / PyTorch, embedded and generated-code targets, and browser workflows via WASM.
+      </p>
+      <p class="text-text-muted leading-relaxed">
+        Rumoca bridges that gap by treating Modelica as a semantic frontend and compiling models into rich intermediate forms suitable for robust simulation, symbolic analysis, optimization and differentiable workflows, multi-backend code generation, and interoperability with downstream tools.
+      </p>
+    </section>
+
+    <section class="space-y-6 mb-16">
+      <h2 class="text-2xl font-semibold text-text">Paper</h2>
+      <p class="text-text-muted leading-relaxed">
+        <span class="text-text font-medium">Rumoca: Towards a Translator from Modelica to Algebraic Modeling Languages.</span>
+        <br />
+        16th International Modelica &amp; FMI Conference, 2025, Lucerne.
+      </p>
+      <a
+        href="https://doi.org/10.3384/ecp212.139"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+      >
+        Read the Paper &rarr;
+      </a>
+      <p class="text-text-muted leading-relaxed">
+        Developed at <span class="text-text font-medium">Purdue University's School of Aeronautics and Astronautics</span> and
+        <a href="https://github.com/CogniPilot" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">CogniPilot</a>.
+        Apache-2.0 licensed.
+      </p>
+    </section>
+
+    <section class="space-y-6 mb-16">
+      <h2 class="text-2xl font-semibold text-text">Relationship to the Ecosystem</h2>
+      <p class="text-text-muted leading-relaxed">
+        <span class="text-text font-medium">vs existing Modelica compilers:</span> Rumoca emphasizes explicit compiler phases and IR boundaries, strong structural analysis and DAE lowering, backend-neutral code generation, modern tooling and language integrations, and reusable symbolic outputs rather than a single closed execution path.
+      </p>
+      <p class="text-text-muted leading-relaxed">
+        <span class="text-text font-medium">vs host-language modeling approaches:</span> Rumoca starts from a dedicated declarative modeling language (Modelica) rather than embedding in a general-purpose language, giving it compatibility with actual Modelica packages, stronger frontend semantics, and a better foundation for predictable structural analysis and compilation.
+      </p>
+    </section>
+
+    <section class="space-y-6 mb-16">
+      <h2 class="text-2xl font-semibold text-text">Open Source &amp; Contributing</h2>
+      <p class="text-text-muted leading-relaxed">
+        Rumoca is an open-source project licensed under Apache-2.0, and we actively welcome contributors of all experience levels. Whether you're a seasoned compiler developer, a Modelica user who wants to improve backend support, or a student looking for a meaningful project to get involved with &mdash; there's a place for you.
+      </p>
+      <p class="text-text-muted leading-relaxed">
+        Ways to contribute include adding or improving code generation backends, expanding Modelica language coverage, writing tests and documentation, reporting bugs, and suggesting new features. Check out the
+        <a href="https://github.com/CogniPilot/rumoca/issues" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">open issues</a>
+        for a good starting point, or open a new issue to discuss your idea before diving in.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="https://github.com/CogniPilot/rumoca"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+        >
+          Browse the Source &rarr;
+        </a>
+        <a
+          href="https://github.com/CogniPilot/rumoca/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-text font-medium hover:bg-surface transition-colors"
+        >
+          View Open Issues
+        </a>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="text-2xl font-semibold text-text">Contact &amp; Community</h2>
+      <ul class="space-y-2 text-text-muted">
+        <li>
+          GitHub: <a href="https://github.com/CogniPilot/rumoca" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">github.com/CogniPilot/rumoca</a>
+        </li>
+        <li>
+          VS Code Extension: <a href="https://marketplace.visualstudio.com/items?itemName=JamesGoppert.rumoca-modelica" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">Rumoca Modelica</a>
+        </li>
+        <li>
+          Issues: <a href="https://github.com/CogniPilot/rumoca/issues" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">github.com/CogniPilot/rumoca/issues</a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

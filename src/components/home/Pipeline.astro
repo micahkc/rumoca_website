@@ -1,0 +1,63 @@
+---
+const stages = [
+  { label: 'Parse', desc: 'Source to AST / class tree' },
+  { label: 'Resolve', desc: 'Scope setup & name resolution' },
+  { label: 'Typecheck', desc: 'Types, dimensions, parameters' },
+  { label: 'Instantiate', desc: 'Extends & modifier application' },
+  { label: 'Flatten', desc: 'Hierarchy & connection expansion' },
+  { label: 'DAE', desc: 'Variable classification & DAE' },
+  { label: 'Structural', desc: 'BLT, matching, IC planning' },
+  { label: 'Codegen', desc: 'Template-driven generation' },
+];
+
+const backends = [
+  { label: 'CasADi', color: 'text-emerald-600 border-emerald-300 bg-emerald-50' },
+  { label: 'SymPy', color: 'text-sky-600 border-sky-300 bg-sky-50' },
+  { label: 'JAX', color: 'text-purple-600 border-purple-300 bg-purple-50' },
+  { label: 'Julia/MTK', color: 'text-pink-600 border-pink-300 bg-pink-50' },
+  { label: 'FMU', color: 'text-amber-600 border-amber-300 bg-amber-50' },
+  { label: 'Embedded C', color: 'text-blue-600 border-blue-300 bg-blue-50' },
+  { label: 'Custom Jinja', color: 'text-text-muted border-border bg-surface' },
+];
+---
+
+<section class="py-20 border-t border-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl sm:text-4xl font-bold text-text text-center mb-4">
+      Compiler Pipeline
+    </h2>
+    <p class="text-text-muted text-center max-w-2xl mx-auto mb-16">
+      From Modelica source to any symbolic backend in a single pass.
+    </p>
+
+    <div class="flex flex-wrap items-center justify-center gap-2 mb-8">
+      <span class="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 text-accent font-mono text-sm font-semibold">
+        .mo Source
+      </span>
+      {stages.map((stage) => (
+        <>
+          <span class="text-text-muted hidden sm:inline">&rarr;</span>
+          <span class="text-text-muted sm:hidden">&darr;</span>
+          <div class="px-4 py-2 rounded-lg bg-surface border border-border text-center">
+            <div class="text-sm font-mono text-text font-medium">{stage.label}</div>
+            <div class="text-xs text-text-muted mt-0.5">{stage.desc}</div>
+          </div>
+        </>
+      ))}
+    </div>
+
+    <div class="flex justify-center my-6">
+      <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      {backends.map(({ label, color }) => (
+        <span class={`px-5 py-2.5 rounded-lg border font-mono text-sm font-medium ${color}`}>
+          {label}
+        </span>
+      ))}
+    </div>
+  </div>
+</section>

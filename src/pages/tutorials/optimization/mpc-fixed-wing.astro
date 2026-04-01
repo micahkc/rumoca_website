@@ -1,0 +1,27 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+---
+
+<TutorialLayout
+  title="MPC: Fixed-Wing Aircraft"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Optimization & MPC', href: '/tutorials' },
+    { label: 'MPC: Fixed-Wing' },
+  ]}
+  prev={{ label: 'MPC: Quadrotor', href: '/tutorials/optimization/mpc-quadrotor' }}
+>
+  <div class="p-6 rounded-xl bg-surface border border-border mb-8">
+    <h2 class="text-lg font-semibold text-text mb-2">Coming Soon</h2>
+    <p class="text-text-muted leading-relaxed">
+      This tutorial will walk through model predictive control for a fixed-wing aircraft (SportCub) &mdash;
+      from writing the 6-DOF Modelica model to compiling it with CasADi and running MPC path following.
+      This is the capstone of the tutorial series, tying together everything from the previous sections.
+    </p>
+    <p class="text-text-muted leading-relaxed mt-3">
+      The aircraft model is being ported from the
+      <a href="https://github.com/CogniPilot/cubs2" class="text-teal hover:text-accent transition-colors">CogniPilot CUBS2</a>
+      project into Modelica, replacing hand-written CasADi code with generated code from Rumoca.
+    </p>
+  </div>
+</TutorialLayout>

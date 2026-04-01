@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SimulationApp from '../components/simulation/SimulationApp';
+---
+
+<BaseLayout title="Simulation - Rumoca" description="Fly aircraft in real-time using Modelica physics running in your browser via WebAssembly." fullScreen={true}>
+  <SimulationApp client:only="react" />
+</BaseLayout>

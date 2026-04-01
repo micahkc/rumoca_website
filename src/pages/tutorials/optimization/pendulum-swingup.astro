@@ -1,0 +1,146 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import PythonWorkflow from '../../../components/tutorials/PythonWorkflow';
+---
+
+<TutorialLayout
+  title="Pendulum Swing-Up"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Optimization & MPC', href: '/tutorials' },
+    { label: 'Pendulum Swing-Up' },
+  ]}
+  prev={{ label: 'Optimal Control Intro', href: '/tutorials/optimization/optimal-control' }}
+  next={{ label: 'MPC: Quadrotor', href: '/tutorials/optimization/mpc-quadrotor' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The pendulum swing-up is a classic benchmark in trajectory optimization. The goal is to find a
+    torque profile that brings a simple pendulum from the stable hanging equilibrium
+    (<code class="font-mono text-sm text-accent">theta = pi</code>) to the unstable upright position
+    (<code class="font-mono text-sm text-accent">theta = 0</code>) while minimizing control effort.
+    Unlike a linear controller that works near a single operating point, trajectory optimization
+    plans a globally feasible path through the full nonlinear dynamics.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-6">
+    We define the pendulum model in Modelica below. The state consists of the angle
+    <code class="font-mono text-sm text-accent">theta</code> (measured from the upright position,
+    so <code class="font-mono text-sm text-accent">theta = pi</code> is hanging down) and the angular velocity
+    <code class="font-mono text-sm text-accent">omega</code>. A torque input
+    <code class="font-mono text-sm text-accent">tau</code> is applied at the pivot, and light damping
+    is included so the solution is physically realistic. Compile this with the CasADi backend to
+    produce the symbolic dynamics needed for optimization.
+  </p>
+
+  <h2 class="text-xl font-semibold text-text mt-12 mb-4">Direct Transcription with CasADi</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Direct transcription converts the continuous-time optimal control problem into a finite-dimensional
+    nonlinear program (NLP). We discretize the trajectory into
+    <code class="font-mono text-sm text-accent">N = 100</code> time steps over
+    <code class="font-mono text-sm text-accent">T = 2.0</code> seconds, introduce decision variables
+    for the state and control at each node, and enforce the dynamics as equality constraints using
+    forward Euler integration. The cost is the total squared torque, encouraging a smooth, energy-efficient
+    swing-up maneuver.
+  </p>
+
+  <PythonWorkflow
+    client:only="react"
+    initialSource={`model PendulumSwingUp
+  Real theta(start = 3.14159) "Angle from upright (rad)";
+  Real omega(start = 0) "Angular velocity (rad/s)";
+  input Real tau "Applied torque (N*m)";
+  parameter Real m = 1.0 "Mass (kg)";
+  parameter Real l = 1.0 "Length (m)";
+  parameter Real g = 9.81 "Gravity (m/s^2)";
+  parameter Real b = 0.1 "Damping (N*m*s)";
+equation
+  der(theta) = omega;
+  m * l^2 * der(omega) = -m * g * l * sin(theta) - b * omega + tau;
+end PendulumSwingUp;`}
+    modelName="PendulumSwingUp"
+    backend="casadi"
+    pipInstalls={['casadi', 'numpy']}
+    title="Direct Transcription: Pendulum Swing-Up"
+    pythonTemplate={`{generated_code}
+
+import casadi as ca
+import numpy as np
+
+# Problem dimensions
+N = 100          # number of time steps
+T = 2.0          # total time horizon (s)
+dt = T / N       # step size
+
+# Physical parameters
+m = 1.0; l = 1.0; g = 9.81; b = 0.1
+
+# ---- Build the OCP with CasADi Opti ----
+opti = ca.Opti()
+
+# Decision variables: states at each node, controls at each interval
+Theta = opti.variable(N + 1)   # angle
+Omega = opti.variable(N + 1)   # angular velocity
+Tau   = opti.variable(N)       # applied torque
+
+# Cost: minimize total control effort
+opti.minimize(ca.sumsqr(Tau))
+
+# Dynamics constraints (forward Euler)
+for k in range(N):
+    theta_k = Theta[k]
+    omega_k = Omega[k]
+    tau_k   = Tau[k]
+
+    # From the Modelica equations:
+    #   der(theta) = omega
+    #   m*l^2 * der(omega) = -m*g*l*sin(theta) - b*omega + tau
+    d_theta = omega_k
+    d_omega = (-m * g * l * ca.sin(theta_k) - b * omega_k + tau_k) / (m * l**2)
+
+    opti.subject_to(Theta[k + 1] == theta_k + dt * d_theta)
+    opti.subject_to(Omega[k + 1] == omega_k + dt * d_omega)
+
+# Boundary conditions
+opti.subject_to(Theta[0] == ca.pi)    # start hanging down
+opti.subject_to(Omega[0] == 0)        # start at rest
+opti.subject_to(Theta[N] == 0)        # end upright
+opti.subject_to(Omega[N] == 0)        # end at rest
+
+# Control limits (optional but realistic)
+opti.subject_to(opti.bounded(-10, Tau, 10))
+
+# Solver
+opti.solver('ipopt')
+sol = opti.solve()
+
+# Extract solution
+theta_opt = sol.value(Theta)
+omega_opt = sol.value(Omega)
+tau_opt   = sol.value(Tau)
+
+print(f"Final angle:    {theta_opt[-1]:.4f} rad (target 0)")
+print(f"Final velocity: {omega_opt[-1]:.4f} rad/s (target 0)")
+print(f"Total effort:   {np.sum(sol.value(Tau)**2) * dt:.4f}")`}
+  />
+
+  <h2 class="text-xl font-semibold text-text mt-12 mb-4">How the Boundary Conditions Drive the Solution</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The optimizer has no explicit knowledge of "swing-up strategy" -- it discovers the maneuver entirely
+    from the boundary conditions and dynamics. The initial condition
+    <code class="font-mono text-sm text-accent">theta(0) = pi, omega(0) = 0</code> pins the pendulum
+    at the bottom, while the terminal condition
+    <code class="font-mono text-sm text-accent">theta(T) = 0, omega(T) = 0</code> demands it arrive
+    at the top at rest. IPOPT searches over the space of all torque profiles and state trajectories
+    that satisfy the discretized dynamics to find the one with minimum control effort.
+  </p>
+  <p class="text-text-muted leading-relaxed mb-4">
+    For short time horizons or tight torque bounds, the optimizer may find a solution that pumps energy
+    in with one or more swings before catching the pendulum at the top. Increasing the time budget or
+    relaxing the torque limit typically yields a single, direct swing. Experimenting with these
+    trade-offs is one of the most instructive aspects of this problem.
+  </p>
+  <p class="text-text-muted leading-relaxed mb-6">
+    In the next tutorial, we extend these ideas to receding-horizon control (MPC) applied to a
+    quadrotor, where the optimization is solved repeatedly in a closed loop.
+  </p>
+</TutorialLayout>

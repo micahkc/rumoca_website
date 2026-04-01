@@ -1,0 +1,140 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Bouncing Ball 3D"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: '3D Visualization', href: '/tutorials' },
+    { label: 'Bouncing Ball 3D' },
+  ]}
+  prev={{ label: 'Series RLC', href: '/tutorials/getting-started/series-rlc' }}
+  next={{ label: 'Two-Body Orbit', href: '/tutorials/visualization/two-body-orbit' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The 3D viewer lets you map simulation state to a live Three.js scene. Instead of reading
+    plots, you watch the physics unfold in three dimensions. This tutorial walks through the
+    viewer API using the same bouncing-ball model from the Getting Started section.
+  </p>
+
+  <h3 class="text-lg font-semibold text-text-primary mt-6 mb-2">How the viewer works</h3>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The viewer script exposes a <code class="font-mono text-sm text-accent">ctx</code> object
+    with two callback hooks:
+  </p>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed mb-4 space-y-1">
+    <li>
+      <code class="font-mono text-sm text-accent">ctx.onInit(api)</code> &mdash; called once when the
+      viewer mounts. Use it to set up lighting, create meshes, and store references in
+      <code class="font-mono text-sm text-accent">api.state</code>.
+    </li>
+    <li>
+      <code class="font-mono text-sm text-accent">ctx.onFrame(api)</code> &mdash; called on every
+      animation frame during playback. Use
+      <code class="font-mono text-sm text-accent">api.getValue(name, api.sampleIndex)</code> to read
+      the current value of any simulation variable, then update your Three.js objects.
+    </li>
+  </ul>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    The <code class="font-mono text-sm text-accent">api</code> argument gives you access to
+    <code class="font-mono text-sm text-accent">api.THREE</code> (the Three.js library),
+    <code class="font-mono text-sm text-accent">api.state</code> (a persistent object shared between
+    init and frame callbacks), and
+    <code class="font-mono text-sm text-accent">api.state.scene</code> (the root Three.js scene).
+    Press <strong>Play</strong> to start the animation, or scrub the timeline to jump to any point
+    in the simulation.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model BouncingBall
+  Real h(start = 1) "height";
+  Real v(start = 0) "velocity";
+  parameter Real g = 9.81 "gravity";
+  parameter Real e = 0.7 "coefficient of restitution";
+equation
+  der(h) = v;
+  der(v) = -g;
+  when h < 0 then
+    reinit(v, -e * pre(v));
+  end when;
+end BouncingBall;`}
+    modelName="BouncingBall"
+    tEnd={5}
+    defaultScript={`// ---- onInit: runs once when the 3D viewer mounts ----
+ctx.onInit = (api) => {
+  const { THREE, state } = api;
+
+  // Set a dark background for the scene
+  state.scene.background = new THREE.Color(0x101010);
+
+  // Add a directional light (sun-like) and soft ambient fill
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+
+  // A grid helper gives visual ground-plane reference
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+
+  // Create a flat box to represent the floor
+  const floor = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.1, 8),
+    new THREE.MeshStandardMaterial({ color: 0x444444 })
+  );
+  floor.position.set(0, -0.05, 0);
+  state.scene.add(floor);
+
+  // Create the ball and store a reference in state so
+  // onFrame can move it later
+  state.ball = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 32, 24),
+    new THREE.MeshStandardMaterial({ color: 0x3cb4ff })
+  );
+  state.scene.add(state.ball);
+};
+
+// ---- onFrame: runs every animation frame during playback ----
+ctx.onFrame = (api) => {
+  // Read the current height from the simulation results.
+  // api.sampleIndex tracks the current timestep.
+  const h = api.getValue("h", api.sampleIndex);
+
+  // Update the ball's Y position to match the simulation
+  if (api.state.ball) {
+    api.state.ball.position.set(0, Number.isFinite(h) ? h : 0, 0);
+  }
+};`}
+  />
+
+  <h3 class="text-lg font-semibold text-text-primary mt-6 mb-2">Walking through the script</h3>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    <strong>onInit</strong> receives the <code class="font-mono text-sm text-accent">api</code>
+    object and uses <code class="font-mono text-sm text-accent">api.THREE</code> to build the
+    scene. The directional light and ambient light ensure the sphere is properly shaded. The
+    floor and grid helper provide spatial context. Every object you want to update later should
+    be stored on <code class="font-mono text-sm text-accent">api.state</code> &mdash; this object
+    persists across frames.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    <strong>onFrame</strong> is where the simulation meets the visuals. The call
+    <code class="font-mono text-sm text-accent">api.getValue("h", api.sampleIndex)</code> returns
+    the value of the Modelica variable <code class="font-mono text-sm text-accent">h</code> at
+    the current playback time. We map that directly to the ball's Y coordinate. The
+    <code class="font-mono text-sm text-accent">Number.isFinite</code> guard protects against
+    <code class="font-mono text-sm text-accent">NaN</code> or
+    <code class="font-mono text-sm text-accent">undefined</code> values at the edges of the
+    time series.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    Use the playback controls beneath the 3D viewport to play, pause, and scrub through the
+    simulation. The next tutorial extends this pattern to a more complex scene with orbital
+    mechanics.
+  </p>
+</TutorialLayout>

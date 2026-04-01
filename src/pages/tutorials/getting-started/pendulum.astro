@@ -1,0 +1,80 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Pendulum"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Pendulum' },
+  ]}
+  prev={{ label: 'Bouncing Ball', href: '/tutorials/getting-started/bouncing-ball' }}
+  next={{ label: 'Van der Pol', href: '/tutorials/getting-started/van-der-pol' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    A simple damped pendulum demonstrates nonlinear dynamics. The angle <em>&theta;</em> evolves under
+    gravity and viscous damping. The <code class="font-mono text-sm text-accent">sin(&theta;)</code> term
+    makes this a genuinely nonlinear ODE, unlike the linearized version taught in introductory courses.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model Pendulum
+  Real theta(start = 0.5) "angle";
+  Real omega(start = 0) "angular velocity";
+  parameter Real L = 1.0 "length";
+  parameter Real g = 9.81 "gravity";
+  parameter Real b = 0.1 "damping";
+equation
+  der(theta) = omega;
+  L * der(omega) = -g * sin(theta) - b * omega;
+end Pendulum;`}
+    modelName="Pendulum"
+    tEnd={10}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(2, 4, 3);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Pivot
+  const pivot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 16, 12),
+    new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  pivot.position.set(0, 2, 0);
+  state.scene.add(pivot);
+  // Rod
+  state.rod = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0xaaaaaa })
+  );
+  state.scene.add(state.rod);
+  // Bob
+  state.bob = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 32, 24),
+    new THREE.MeshStandardMaterial({ color: 0x8b5cf6 })
+  );
+  state.scene.add(state.bob);
+};
+ctx.onFrame = (api) => {
+  const theta = api.getValue("theta", api.sampleIndex);
+  const th = Number.isFinite(theta) ? theta : 0;
+  const L = 1.0;
+  const bx = L * Math.sin(th);
+  const by = 2 - L * Math.cos(th);
+  if (api.state.bob) api.state.bob.position.set(bx, by, 0);
+  if (api.state.rod) {
+    api.state.rod.geometry.dispose();
+    api.state.rod.geometry = new api.THREE.BufferGeometry().setFromPoints([
+      new api.THREE.Vector3(0, 2, 0),
+      new api.THREE.Vector3(bx, by, 0),
+    ]);
+  }
+};`}
+  />
+</TutorialLayout>

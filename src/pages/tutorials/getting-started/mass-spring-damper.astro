@@ -1,0 +1,96 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Mass-Spring-Damper"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Mass-Spring-Damper' },
+  ]}
+  prev={{ label: 'Your First Model', href: '/tutorials/getting-started/first-model' }}
+  next={{ label: 'Bouncing Ball', href: '/tutorials/getting-started/bouncing-ball' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The mass-spring-damper is the canonical introductory ODE system. A mass <em>m</em> is attached to a spring
+    with stiffness <em>k</em> and a damper with coefficient <em>c</em>. The governing equations are:
+  </p>
+  <div class="p-4 rounded-lg bg-surface border border-border font-mono text-sm text-text-muted mb-6">
+    dx/dt = v<br/>
+    m &middot; dv/dt = -k &middot; x - c &middot; v
+  </div>
+  <p class="text-text-muted leading-relaxed mb-4">
+    In Modelica, this is expressed naturally. Try compiling the model below with different backends.
+  </p>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`model MassSpringDamper
+  Real x(start = 1);
+  Real v(start = 0);
+  parameter Real k = 1, c = 0.1, m = 1;
+equation
+  der(x) = v;
+  m * der(v) = -k * x - c * v;
+end MassSpringDamper;`}
+    modelName="MassSpringDamper"
+    tEnd={10}
+    defaultScript={`ctx.onInit = (api) => {
+  const { THREE, state } = api;
+  state.scene.background = new THREE.Color(0x101010);
+  const light = new THREE.DirectionalLight(0xffffff, 1.0);
+  light.position.set(3, 4, 2);
+  state.scene.add(light);
+  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
+  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
+  // Wall anchor
+  const wall = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 1.5, 1.5),
+    new THREE.MeshStandardMaterial({ color: 0x666666 })
+  );
+  wall.position.set(-2, 0.75, 0);
+  state.scene.add(wall);
+  // Mass block
+  state.mass = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.5, 0.5),
+    new THREE.MeshStandardMaterial({ color: 0xf0732e })
+  );
+  state.mass.position.set(0, 0.25, 0);
+  state.scene.add(state.mass);
+  // Spring line
+  state.spring = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x15b7e7 })
+  );
+  state.scene.add(state.spring);
+};
+ctx.onFrame = (api) => {
+  const x = api.getValue("x", api.sampleIndex);
+  const pos = Number.isFinite(x) ? x : 0;
+  if (api.state.mass) api.state.mass.position.x = pos;
+  if (api.state.spring) {
+    const pts = [];
+    const segs = 20;
+    const amp = 0.15;
+    for (let i = 0; i <= segs; i++) {
+      const t = i / segs;
+      const sx = -1.9 + t * (pos + 0.25 - (-1.9));
+      const sy = 0.25 + (i > 0 && i < segs ? amp * Math.sin(i * Math.PI) * (i % 2 ? 1 : -1) : 0);
+      pts.push(new api.THREE.Vector3(sx, sy, 0));
+    }
+    api.state.spring.geometry.dispose();
+    api.state.spring.geometry = new api.THREE.BufferGeometry().setFromPoints(pts);
+  }
+};`}
+  />
+
+  <h2 class="text-xl font-semibold text-text mt-12 mb-4">Understanding the Output</h2>
+  <p class="text-text-muted leading-relaxed">
+    In the CasADi output, <code class="font-mono text-sm text-accent">x</code> is the state vector
+    containing position and velocity,
+    <code class="font-mono text-sm text-accent">p</code> contains the parameters (k, c, m), and the ODE function
+    maps (x, p) &rarr; dx/dt. You can use this directly with CasADi integrators or optimal control solvers.
+  </p>
+</TutorialLayout>
