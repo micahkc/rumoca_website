@@ -1,0 +1,56 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+
+const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
+const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
+const cardDescClass = "text-sm text-text-muted mt-1";
+---
+
+<TutorialLayout
+  title="Getting Started"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started' },
+  ]}
+  next={{ label: 'Your First Model', href: '/tutorials/getting-started/first-model' }}
+>
+  <p class="text-text-muted text-lg mb-6 leading-relaxed">
+    Rumoca can convert Modelica models to CasADi, SymPy, Julia, and raw C—but before
+    exploring those workflows, it helps to get comfortable with the basics. In this section
+    you’ll write Modelica models, compile them, simulate with the built-in ODE solver, and
+    plot results—all running locally via WebAssembly with no server or installation required.
+  </p>
+  <p class="text-text-muted text-lg mb-12 leading-relaxed">
+    The tutorials start with the simplest ODE and progressively introduce nonlinear dynamics,
+    event handling, multi-domain modeling, and component-based architectures with connectors.
+    By the end you’ll be comfortable with every feature of the Modelica editor and ready to
+    move on to 3D visualization and code generation.
+  </p>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <a href="/tutorials/getting-started/first-model" class={cardClass}>
+      <h3 class={cardTitleClass}>Your First Model</h3>
+      <p class={cardDescClass}>The simplest second-order ODE. Constant acceleration.</p>
+    </a>
+    <a href="/tutorials/getting-started/mass-spring-damper" class={cardClass}>
+      <h3 class={cardTitleClass}>Mass-Spring-Damper</h3>
+      <p class={cardDescClass}>Linear second-order ODE. Compare compilation backends.</p>
+    </a>
+    <a href="/tutorials/getting-started/bouncing-ball" class={cardClass}>
+      <h3 class={cardTitleClass}>Bouncing Ball</h3>
+      <p class={cardDescClass}>Event handling with <code class="font-mono text-xs">when</code> clauses.</p>
+    </a>
+    <a href="/tutorials/getting-started/van-der-pol" class={cardClass}>
+      <h3 class={cardTitleClass}>Van der Pol Oscillator</h3>
+      <p class={cardDescClass}>Limit cycles and solver settings.</p>
+    </a>
+    <a href="/tutorials/getting-started/series-rlc" class={cardClass}>
+      <h3 class={cardTitleClass}>Series RLC Circuit</h3>
+      <p class={cardDescClass}>Underdamped oscillation. Parameter exploration.</p>
+    </a>
+    <a href="/tutorials/getting-started/circuit-components" class={cardClass}>
+      <h3 class={cardTitleClass}>Circuit Components</h3>
+      <p class={cardDescClass}>Component-based Modelica with connectors and inheritance.</p>
+    </a>
+  </div>
+</TutorialLayout>

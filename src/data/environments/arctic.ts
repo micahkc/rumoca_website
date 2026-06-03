@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { addLandingPad } from './cognipilot-logo';
 
 export function setupArcticEnvironment(scene: THREE.Scene): void {
@@ -222,59 +223,28 @@ export function setupArcticEnvironment(scene: THREE.Scene): void {
     scene.add(bear);
   }
 
-  // Penguin
+  // Penguin (GLB model by Poly by Google, CC-BY 3.0)
   {
-    const penguin = new THREE.Group();
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.6 });
-    const whiteBellyMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.5 });
-    const orangeMat = new THREE.MeshStandardMaterial({ color: 0xff8822, roughness: 0.5 });
-    // Body (black back)
-    const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), blackMat);
-    pBody.scale.set(0.8, 1.2, 0.8);
-    pBody.position.y = 0.2;
-    penguin.add(pBody);
-    // White belly (front)
-    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), whiteBellyMat);
-    belly.scale.set(0.7, 1.1, 0.5);
-    belly.position.set(0.03, 0.2, 0);
-    penguin.add(belly);
-    // Head
-    const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 6), blackMat);
-    pHead.position.set(0, 0.4, 0);
-    penguin.add(pHead);
-    // White face patches
-    for (const side of [-1, 1]) {
-      const patch = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), whiteBellyMat);
-      patch.position.set(0.04, 0.42, side * 0.035);
-      penguin.add(patch);
-    }
-    // Eyes
-    for (const side of [-1, 1]) {
-      const pEye = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      pEye.position.set(0.055, 0.43, side * 0.03);
-      penguin.add(pEye);
-    }
-    // Beak
-    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.04, 4), orangeMat);
-    beak.rotation.z = -Math.PI / 2;
-    beak.position.set(0.09, 0.39, 0);
-    penguin.add(beak);
-    // Feet
-    for (const side of [-1, 1]) {
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.01, 0.05), orangeMat);
-      foot.position.set(0.01, 0.005, side * 0.04);
-      penguin.add(foot);
-    }
-    // Flippers
-    for (const side of [-1, 1]) {
-      const flipper = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.12, 0.04), blackMat);
-      flipper.position.set(0, 0.2, side * 0.1);
-      flipper.rotation.x = side * 0.2;
-      penguin.add(flipper);
-    }
-    penguin.position.set(-5, 0, -4);
-    penguin.rotation.y = 0.8;
-    scene.add(penguin);
+    const loader = new GLTFLoader();
+    loader.load('/models/penguin.glb', (gltf) => {
+      const penguin = gltf.scene;
+      penguin.position.set(-5, 0.44, -4);
+      penguin.rotation.y = 0.8;
+      penguin.scale.set(0.005, 0.005, 0.005);
+      scene.add(penguin);
+    });
+  }
+
+  // Igloo (GLB model by Poly by Google, CC-BY 3.0)
+  {
+    const loader = new GLTFLoader();
+    loader.load('/models/igloo.glb', (gltf) => {
+      const igloo = gltf.scene;
+      igloo.position.set(-10, 0.55, 8);
+      igloo.rotation.y = 0.6;
+      igloo.scale.set(1.5, 1.5, 1.5);
+      scene.add(igloo);
+    });
   }
 
   // Snow particles

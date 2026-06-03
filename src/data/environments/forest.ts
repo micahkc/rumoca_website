@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { addLandingPad } from './cognipilot-logo';
 
 export function setupForestEnvironment(scene: THREE.Scene): void {
@@ -124,59 +125,60 @@ export function setupForestEnvironment(scene: THREE.Scene): void {
     scene.add(flower);
   }
 
-  // Brown bear
+  // Black bear (GLB model by Poly by Google, CC-BY 3.0)
   {
-    const bear = new THREE.Group();
-    const furMat = new THREE.MeshStandardMaterial({ color: 0x5c3820, roughness: 0.85 });
-    const noseMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 });
-    const snoutMat = new THREE.MeshStandardMaterial({ color: 0x7a5030, roughness: 0.8 });
-    // Body
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), furMat);
-    body.scale.set(1.5, 1.0, 1.0);
-    body.position.y = 0.5;
-    bear.add(body);
-    // Shoulder hump
-    const hump = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), furMat);
-    hump.position.set(0.2, 0.8, 0);
-    bear.add(hump);
-    // Head
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), furMat);
-    head.position.set(0.55, 0.65, 0);
-    bear.add(head);
-    // Snout
-    const snout = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), snoutMat);
-    snout.scale.set(1.3, 0.8, 0.9);
-    snout.position.set(0.72, 0.58, 0);
-    bear.add(snout);
-    // Nose
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 4), noseMat);
-    nose.position.set(0.82, 0.6, 0);
-    bear.add(nose);
-    // Eyes
-    for (const side of [-1, 1]) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), noseMat);
-      eye.position.set(0.66, 0.72, side * 0.12);
-      bear.add(eye);
-    }
-    // Ears
-    for (const side of [-1, 1]) {
-      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), furMat);
-      ear.position.set(0.45, 0.85, side * 0.14);
-      bear.add(ear);
-    }
-    // Legs
-    const legPositions: [number, number, number][] = [
-      [0.35, 0.2, 0.22], [0.35, 0.2, -0.22],
-      [-0.35, 0.2, 0.22], [-0.35, 0.2, -0.22],
-    ];
-    legPositions.forEach(([lx, ly, lz]) => {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 0.4, 6), furMat);
-      leg.position.set(lx, ly, lz);
-      bear.add(leg);
+    const loader = new GLTFLoader();
+    loader.load('/models/bear.glb', (gltf) => {
+      const bear = gltf.scene;
+      bear.position.set(7, 0.04, 5);
+      bear.rotation.y = -1.2 + Math.PI / 2;
+      bear.scale.set(0.08, 0.08, 0.08);
+      scene.add(bear);
     });
-    bear.position.set(7, 0, 5);
-    bear.rotation.y = -1.2;
-    scene.add(bear);
+  }
+
+  // T-Rex (loaded from GLB model by Quaternius, CC0)
+  {
+    const loader = new GLTFLoader();
+    loader.load('/models/trex.glb', (gltf) => {
+      const trex = gltf.scene;
+      trex.position.set(10, 0, -8);
+      trex.rotation.y = 1.0 + Math.PI;
+      trex.scale.set(0.25, 0.25, 0.25);
+      trex.name = 'trex';
+      scene.add(trex);
+
+      // Animation: alternate between idle and attack
+      const mixer = new THREE.AnimationMixer(trex);
+      const clips = gltf.animations;
+      const idleClip = clips.find((c) => c.name.includes('Idle'));
+      const attackClip = clips.find((c) => c.name.includes('Attack'));
+      if (idleClip && attackClip) {
+        const idleAction = mixer.clipAction(idleClip);
+        const attackAction = mixer.clipAction(attackClip);
+        attackAction.loop = THREE.LoopOnce;
+        attackAction.clampWhenFinished = true;
+        idleAction.play();
+
+        // Every 6-10s, crossfade to attack then back to idle
+        const triggerAttack = () => {
+          attackAction.reset().play();
+          idleAction.crossFadeTo(attackAction, 0.3, true);
+          setTimeout(() => {
+            attackAction.crossFadeTo(idleAction, 0.3, true);
+            idleAction.reset().play();
+          }, (attackClip.duration - 0.3) * 1000);
+        };
+        setInterval(triggerAttack, (6 + Math.random() * 4) * 1000);
+      } else {
+        // Fallback: just play whatever is available
+        const clip = idleClip || attackClip || clips[0];
+        if (clip) mixer.clipAction(clip).play();
+      }
+
+      const clock = new THREE.Clock();
+      trex.userData.update = () => mixer.update(clock.getDelta());
+    });
   }
 
   addLandingPad(scene);

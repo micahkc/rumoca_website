@@ -1,0 +1,48 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+
+const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
+const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
+const cardDescClass = "text-sm text-text-muted mt-1";
+---
+
+<TutorialLayout
+  title="Code Generation Workflows"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Code Generation Workflows' },
+  ]}
+  next={{ label: 'Simulation with CasADi', href: '/tutorials/workflows/casadi' }}
+>
+  <p class="text-text-muted text-lg mb-6 leading-relaxed">
+    The real power of Rumoca lies in its ability to integrate with a variety of existing tools.
+    Write your model once in Modelica and generate production-ready code for whichever ecosystem
+    you need &mdash; CasADi for optimization and optimal control, SymPy for symbolic analysis and
+    transfer functions, FMUs for co-simulation with MATLAB/Simulink, or any custom format through
+    Jinja templates.
+  </p>
+  <p class="text-text-muted text-lg mb-12 leading-relaxed">
+    Each tutorial produces a downloadable Python notebook or export artifact that you can run
+    outside the browser. This is the bridge between prototyping in the Rumoca playground and
+    deploying models in real engineering workflows.
+  </p>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <a href="/tutorials/workflows/casadi" class={cardClass}>
+      <h3 class={cardTitleClass}>Simulation with CasADi</h3>
+      <p class={cardDescClass}>Compile to CasADi and simulate with Python.</p>
+    </a>
+    <a href="/tutorials/workflows/sympy-bode" class={cardClass}>
+      <h3 class={cardTitleClass}>SymPy &amp; Bode Plots</h3>
+      <p class={cardDescClass}>Symbolic analysis and frequency-domain plots.</p>
+    </a>
+    <a href="/tutorials/workflows/custom-templates" class={cardClass}>
+      <h3 class={cardTitleClass}>Custom Jinja Templates</h3>
+      <p class={cardDescClass}>Generate MATLAB, Fortran, C, or any format.</p>
+    </a>
+    <a href="/tutorials/workflows/fmu-export" class={cardClass}>
+      <h3 class={cardTitleClass}>FMU Export for MATLAB</h3>
+      <p class={cardDescClass}>Export FMUs and import into Simulink.</p>
+    </a>
+  </div>
+</TutorialLayout>

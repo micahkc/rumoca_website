@@ -36,3 +36,8 @@ body {
 pre, code {
   font-family: var(--font-mono);
 }
+
+.katex-block,
+.katex-inline {
+  color: var(--color-text);
+}

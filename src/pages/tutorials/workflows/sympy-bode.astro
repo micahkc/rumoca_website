@@ -1,6 +1,7 @@
 ---
 import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 import PythonWorkflow from '../../../components/tutorials/PythonWorkflow';
+import Math from '../../../components/common/Math.astro';
 ---
 
 <TutorialLayout
@@ -116,8 +117,7 @@ plt.show()`}
       <code class="font-mono text-sm text-accent">C</code> from the symbolic ODE.
     </li>
     <li>
-      Derives the transfer function
-      <code class="font-mono text-sm text-accent">G(s) = C (sI - A)<sup>-1</sup> B</code>
+      Derives the transfer function <Math tex={`G(s) = C\\,(sI - A)^{-1}\\,B`} />
       from voltage input to angular velocity output.
     </li>
     <li>

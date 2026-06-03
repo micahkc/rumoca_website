@@ -1,0 +1,48 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+
+const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
+const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
+const cardDescClass = "text-sm text-text-muted mt-1";
+---
+
+<TutorialLayout
+  title="Optimization &amp; MPC"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Optimization & MPC' },
+  ]}
+  next={{ label: 'Optimal Control Intro', href: '/tutorials/optimization/optimal-control' }}
+>
+  <p class="text-text-muted text-lg mb-6 leading-relaxed">
+    This is where everything comes together. Rumoca compiles Modelica dynamics directly into
+    CasADi symbolic expressions, which means your models are immediately available for
+    trajectory optimization, parameter estimation, and model predictive control &mdash; no
+    manual transcription, no glue code, no room for transcription errors.
+  </p>
+  <p class="text-text-muted text-lg mb-12 leading-relaxed">
+    You will start with a simple optimal control problem, progress to a full pendulum swing-up
+    via direct transcription, and finish with receding-horizon MPC for both a quadrotor and a
+    fixed-wing aircraft. Each tutorial generates a complete Python notebook that you can
+    download and extend.
+  </p>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <a href="/tutorials/optimization/optimal-control" class={cardClass}>
+      <h3 class={cardTitleClass}>Optimal Control Intro</h3>
+      <p class={cardDescClass}>Your first trajectory optimization with CasADi.</p>
+    </a>
+    <a href="/tutorials/optimization/pendulum-swingup" class={cardClass}>
+      <h3 class={cardTitleClass}>Pendulum Swing-Up</h3>
+      <p class={cardDescClass}>Full swing-up trajectory via direct transcription.</p>
+    </a>
+    <a href="/tutorials/optimization/mpc-quadrotor" class={cardClass}>
+      <h3 class={cardTitleClass}>MPC: Quadrotor</h3>
+      <p class={cardDescClass}>Receding-horizon MPC for quadrotor hover.</p>
+    </a>
+    <a href="/tutorials/optimization/mpc-fixed-wing" class={cardClass}>
+      <h3 class={cardTitleClass}>MPC: Fixed-Wing Aircraft</h3>
+      <p class={cardDescClass}>MPC path following for a SportCub airplane.</p>
+    </a>
+  </div>
+</TutorialLayout>

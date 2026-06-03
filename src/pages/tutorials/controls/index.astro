@@ -1,0 +1,42 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+
+const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
+const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
+const cardDescClass = "text-sm text-text-muted mt-1";
+---
+
+<TutorialLayout
+  title="Control Systems"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Control Systems' },
+  ]}
+  next={{ label: 'PID DC Motor', href: '/tutorials/controls/dc-motor-pid' }}
+>
+  <p class="text-text-muted text-lg mb-6 leading-relaxed">
+    Open-loop simulation tells you how a system behaves. Closing the loop tells you how to
+    <em>make</em> it behave. These tutorials show how to model feedback controllers directly in
+    Modelica &mdash; from a textbook PID loop on a DC motor, to constraint-force DAEs for a
+    pendulum on a cart, to a full six-degree-of-freedom quaternion autopilot for a quadrotor.
+  </p>
+  <p class="text-text-muted text-lg mb-12 leading-relaxed">
+    Because Rumoca compiles to CasADi, every model you build here is one step away from
+    trajectory optimization and model predictive control in the next section.
+  </p>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <a href="/tutorials/controls/dc-motor-pid" class={cardClass}>
+      <h3 class={cardTitleClass}>PID DC Motor</h3>
+      <p class={cardDescClass}>Closed-loop PID control end to end.</p>
+    </a>
+    <a href="/tutorials/controls/pendulum-on-cart" class={cardClass}>
+      <h3 class={cardTitleClass}>Pendulum on Cart</h3>
+      <p class={cardDescClass}>Coupled DAE system with constraint forces.</p>
+    </a>
+    <a href="/tutorials/controls/quadrotor" class={cardClass}>
+      <h3 class={cardTitleClass}>Quadrotor Autopilot</h3>
+      <p class={cardDescClass}>6-DOF quaternion dynamics with cascaded control.</p>
+    </a>
+  </div>
+</TutorialLayout>

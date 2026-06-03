@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import 'katex/dist/katex.min.css';
 
 interface Props {
   title: string;
@@ -13,26 +14,28 @@ const { title, breadcrumbs, prev, next } = Astro.props;
 const sections = [
   {
     label: 'Getting Started',
+    href: '/tutorials/getting-started',
     items: [
       { href: '/tutorials/getting-started/first-model', label: 'Your First Model' },
       { href: '/tutorials/getting-started/mass-spring-damper', label: 'Mass-Spring-Damper' },
       { href: '/tutorials/getting-started/bouncing-ball', label: 'Bouncing Ball' },
-      { href: '/tutorials/getting-started/pendulum', label: 'Pendulum' },
       { href: '/tutorials/getting-started/van-der-pol', label: 'Van der Pol' },
-      { href: '/tutorials/getting-started/rc-circuit', label: 'RC Circuit' },
       { href: '/tutorials/getting-started/series-rlc', label: 'Series RLC Circuit' },
+      { href: '/tutorials/getting-started/circuit-components', label: 'Circuit Components' },
     ],
   },
   {
     label: '3D Visualization',
+    href: '/tutorials/visualization',
     items: [
       { href: '/tutorials/visualization/bouncing-ball-3d', label: 'Bouncing Ball 3D' },
       { href: '/tutorials/visualization/two-body-orbit', label: 'Two-Body Orbit' },
-      { href: '/tutorials/visualization/circuit-components', label: 'Circuit Components' },
+      { href: '/tutorials/visualization/pendulum', label: 'Pendulum' },
     ],
   },
   {
-    label: 'Code Generation Workflows',
+    label: 'Code Generation',
+    href: '/tutorials/workflows',
     items: [
       { href: '/tutorials/workflows/casadi', label: 'Simulation with CasADi' },
       { href: '/tutorials/workflows/sympy-bode', label: 'SymPy & Bode Plots' },
@@ -42,6 +45,7 @@ const sections = [
   },
   {
     label: 'Control Systems',
+    href: '/tutorials/controls',
     items: [
       { href: '/tutorials/controls/dc-motor-pid', label: 'PID DC Motor' },
       { href: '/tutorials/controls/pendulum-on-cart', label: 'Pendulum on Cart' },
@@ -50,6 +54,7 @@ const sections = [
   },
   {
     label: 'Optimization & MPC',
+    href: '/tutorials/optimization',
     items: [
       { href: '/tutorials/optimization/optimal-control', label: 'Optimal Control Intro' },
       { href: '/tutorials/optimization/pendulum-swingup', label: 'Pendulum Swing-Up' },
@@ -84,7 +89,17 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '');
         <div class="sticky top-24 space-y-6">
           {sections.map((section) => (
             <div>
-              <div class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{section.label}</div>
+              <a
+                href={section.href}
+                class:list={[
+                  'block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors',
+                  currentPath === section.href
+                    ? 'text-accent'
+                    : 'text-text-muted hover:text-accent',
+                ]}
+              >
+                {section.label}
+              </a>
               <div class="space-y-0.5">
                 {section.items.map(({ href, label }) => (
                   <a

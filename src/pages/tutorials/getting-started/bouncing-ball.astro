@@ -1,28 +1,41 @@
 ---
 import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+import Math from '../../../components/common/Math.astro';
+import MathBlock from '../../../components/common/MathBlock.astro';
 ---
 
 <TutorialLayout
   title="Bouncing Ball"
   breadcrumbs={[
     { label: 'Tutorials', href: '/tutorials' },
-    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials/getting-started' },
     { label: 'Bouncing Ball' },
   ]}
   prev={{ label: 'Mass-Spring-Damper', href: '/tutorials/getting-started/mass-spring-damper' }}
-  next={{ label: 'Pendulum', href: '/tutorials/getting-started/pendulum' }}
+  next={{ label: 'Van der Pol', href: '/tutorials/getting-started/van-der-pol' }}
 >
+  <div class="mb-6 p-4 rounded-lg border border-accent/20 bg-accent/5">
+    <h3 class="text-sm font-semibold text-accent mb-2">What you'll learn</h3>
+    <ul class="list-disc list-inside text-sm text-text-muted space-y-1">
+      <li>Event handling in Modelica with <code class="font-mono text-xs">when</code> and <code class="font-mono text-xs">reinit</code></li>
+      <li>How discrete events interact with continuous dynamics</li>
+      <li>The effect of energy loss on repeated impacts</li>
+    </ul>
+  </div>
+
   <p class="text-text-muted leading-relaxed mb-4">
-    This example introduces nonlinear dynamics and event handling. A ball is dropped from height
+    This example introduces event handling. A ball is dropped from height
     <em>h</em> and bounces with a coefficient of restitution <em>e</em>. The Modelica
-    <code class="font-mono text-sm text-accent">when</code> clause triggers a velocity reversal at each bounce.
+    <code class="font-mono text-sm text-accent">when</code> clause detects the ground crossing and
+    <code class="font-mono text-sm text-accent">reinit</code> reverses the velocity, scaled by <em>e</em>
+    to model energy loss at each bounce.
   </p>
 
   <ModelWorkbench
     client:only="react"
     initialSource={`model BouncingBall
-  Real h(start = 1) "height";
+  Real h(start = 10) "height";
   Real v(start = 0) "velocity";
   parameter Real g = 9.81 "gravity";
   parameter Real e = 0.7 "coefficient of restitution";
@@ -34,35 +47,52 @@ equation
   end when;
 end BouncingBall;`}
     modelName="BouncingBall"
-    tEnd={5}
-    defaultScript={`ctx.onInit = (api) => {
-  const { THREE, state } = api;
-  state.scene.background = new THREE.Color(0x101010);
-  const light = new THREE.DirectionalLight(0xffffff, 1.0);
-  light.position.set(2, 4, 3);
-  state.scene.add(light);
-  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
-  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
-  const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 0.1, 8),
-    new THREE.MeshStandardMaterial({ color: 0x444444 })
-  );
-  floor.position.set(0, -0.05, 0);
-  state.scene.add(floor);
-  state.ball = new THREE.Mesh(
-    new THREE.SphereGeometry(0.15, 32, 24),
-    new THREE.MeshStandardMaterial({ color: 0x3cb4ff })
-  );
-  state.scene.add(state.ball);
-};
-ctx.onFrame = (api) => {
-  const h = api.getValue("h", api.sampleIndex);
-  if (api.state.ball) api.state.ball.position.set(0, Number.isFinite(h) ? h : 0, 0);
-};`}
+    tEnd={10}
   />
 
-  <p class="text-text-muted leading-relaxed mt-6">
-    Examine the DAE IR output to see how the <code class="font-mono text-sm text-accent">when</code> clause
-    maps to the event structure in the intermediate representation.
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">How it works</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Between bounces the ball follows simple free-fall: <code class="font-mono text-sm text-accent">der(v) = -g</code>.
+    The <code class="font-mono text-sm text-accent">when h &lt; 0</code> clause fires each time the height crosses
+    zero from above. At that instant, <code class="font-mono text-sm text-accent">reinit(v, -e * pre(v))</code>
+    replaces the current velocity with a reversed, smaller value. Each bounce loses a fraction of the kinetic
+    energy, so the ball eventually comes to rest.
   </p>
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Why the ball falls through the floor</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Run the sim long enough and the ball drifts through the floor. This isn't a Rumoca
+    bug &mdash; it's <strong class="text-text">Zeno behavior</strong>: with
+    <Math tex="e < 1" />, the model demands infinitely many bounces in finite time, and
+    no integrator can resolve them all.
+  </p>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The first fall takes <Math tex={`t_1 = \\sqrt{2 h_0 / g}`} />, hitting the ground at
+    speed <Math tex={`|v_1| = g\\, t_1`} />. After bounce <Math tex="n" /> the upward speed
+    is <Math tex="e^n |v_1|" />, giving an air time of <Math tex={`2 e^n |v_1| / g`} />.
+    Summing the geometric series for all bounces:
+  </p>
+  <MathBlock tex={`t_{\\text{rest}} = t_1 + \\frac{2|v_1|}{g}\\sum_{n=1}^{\\infty} e^n = t_1 \\left(1 + \\frac{2e}{1-e}\\right) = \\sqrt{\\tfrac{2h_0}{g}} \\cdot \\frac{1+e}{1-e}`} />
+  <p class="text-text-muted leading-relaxed mb-4">
+    For the defaults (<Math tex="h_0 = 10" />, <Math tex="e = 0.7" />), that's about
+    8.1&nbsp;seconds. Near the end of that window, inter-bounce times shrink below the
+    integrator's minimum step and floating-point precision &mdash; an event is missed,
+    the ball is left with a small negative <Math tex="h" /> and downward velocity, and
+    gravity carries it through. Tightening tolerances delays the failure but cannot
+    eliminate it: the model itself has no finite-time answer.
+  </p>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Production simulators patch this with a <em>Zeno escape</em>: when bounces fire too
+    close together, switch to a "resting" mode that pins <Math tex="h = 0" /> algebraically.
+    These are pragmatic fixes, not physics &mdash; the rigid-contact idealization just
+    doesn't have a clean answer here.
+  </p>
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Things to try</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2">
+    <li>Set <code class="font-mono text-sm text-accent">e = 1.0</code> for a perfectly elastic bounce &mdash; no Zeno problem, the ball returns to its original height every time.</li>
+    <li>Lower <code class="font-mono text-sm text-accent">e</code> to <code class="font-mono text-sm text-accent">0.3</code> &mdash; Zeno hits sooner because <Math tex="t_{\text{rest}}" /> is shorter.</li>
+    <li>Extend <code class="font-mono text-sm text-accent">tEnd</code> well past <Math tex="t_{\text{rest}}" /> and watch the ball drift through the floor as event detection fails.</li>
+    <li>Try <code class="font-mono text-sm text-accent">g = 1.62</code> for lunar gravity &mdash; the same Zeno pattern appears, just stretched in time.</li>
+  </ul>
 </TutorialLayout>

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { addLandingPad } from './cognipilot-logo';
 
 export function setupDesertEnvironment(scene: THREE.Scene): void {
@@ -112,83 +113,16 @@ export function setupDesertEnvironment(scene: THREE.Scene): void {
     }
   });
 
-  // Kangaroo
+  // Kangaroo (GLB model by Poly by Google, CC-BY 3.0)
   {
-    const roo = new THREE.Group();
-    const furMat = new THREE.MeshStandardMaterial({ color: 0x8b6b45, roughness: 0.8 });
-    const bellyMat = new THREE.MeshStandardMaterial({ color: 0xb8956a, roughness: 0.75 });
-    const noseMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6 });
-    // Body -- upright, slightly forward-leaning
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), furMat);
-    body.scale.set(0.7, 1.2, 0.7);
-    body.position.y = 0.6;
-    roo.add(body);
-    // Belly patch
-    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), bellyMat);
-    belly.scale.set(0.5, 1.0, 0.4);
-    belly.position.set(0.05, 0.55, 0);
-    roo.add(belly);
-    // Head
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), furMat);
-    head.scale.set(0.8, 0.9, 0.8);
-    head.position.set(0.08, 1.0, 0);
-    roo.add(head);
-    // Snout
-    const snout = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), furMat);
-    snout.scale.set(1.3, 0.7, 0.7);
-    snout.position.set(0.18, 0.96, 0);
-    roo.add(snout);
-    // Nose
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 4), noseMat);
-    nose.position.set(0.23, 0.97, 0);
-    roo.add(nose);
-    // Eyes
-    for (const side of [-1, 1]) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 4), noseMat);
-      eye.position.set(0.15, 1.04, side * 0.055);
-      roo.add(eye);
-    }
-    // Ears -- tall and pointed
-    for (const side of [-1, 1]) {
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.1, 6), furMat);
-      ear.position.set(0.02, 1.15, side * 0.05);
-      ear.rotation.z = side * 0.15;
-      roo.add(ear);
-    }
-    // Arms (small, forward)
-    for (const side of [-1, 1]) {
-      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.18, 6), furMat);
-      arm.position.set(0.12, 0.65, side * 0.1);
-      arm.rotation.z = -0.5;
-      arm.rotation.x = side * 0.15;
-      roo.add(arm);
-    }
-    // Legs (large, bent at knee)
-    for (const side of [-1, 1]) {
-      // Thigh
-      const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.22, 6), furMat);
-      thigh.position.set(-0.05, 0.35, side * 0.08);
-      thigh.rotation.z = 0.4;
-      roo.add(thigh);
-      // Shin
-      const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.2, 6), furMat);
-      shin.position.set(0.05, 0.12, side * 0.08);
-      shin.rotation.z = -0.3;
-      roo.add(shin);
-      // Foot
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.04), furMat);
-      foot.position.set(0.1, 0.02, side * 0.08);
-      roo.add(foot);
-    }
-    // Tail -- thick, tapers, curves down and back
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.4, 6), furMat);
-    tail.position.set(-0.25, 0.3, 0);
-    tail.rotation.z = 1.2;
-    roo.add(tail);
-
-    roo.position.set(7, 0, -5);
-    roo.rotation.y = -0.8;
-    scene.add(roo);
+    const loader = new GLTFLoader();
+    loader.load('/models/kangaroo.glb', (gltf) => {
+      const roo = gltf.scene;
+      roo.position.set(7, 0.69, -5);
+      roo.rotation.y = -0.8;
+      roo.scale.set(0.01, 0.01, 0.01);
+      scene.add(roo);
+    });
   }
 
   addLandingPad(scene);

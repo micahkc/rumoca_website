@@ -3,32 +3,22 @@ const features = [
   {
     title: 'Full Compiler Pipeline',
     description: 'Parse, resolve, typecheck, instantiate, flatten, and lower Modelica models into robust canonical DAE forms.',
-    icon: '&#9881;',
   },
   {
-    title: 'Symbolic Interoperability',
-    description: 'Generate equation systems suitable for downstream symbolic tools in Julia, Python, Rust, and beyond.',
-    icon: '&#9889;',
+    title: 'Multi-Backend Export',
+    description: 'Generate equation systems and code targeting symbolic, numerical, learned, and embedded workflows across Julia, Python, and beyond.',
   },
   {
     title: 'Robust DAE Simulation',
     description: 'Rust-native simulation with exact AD Jacobians, structural preparation, IC planning, and solver fallbacks.',
-    icon: '&#127760;',
-  },
-  {
-    title: 'Multi-Backend Export',
-    description: 'Template-driven code generation targeting numerical, symbolic, learned, and embedded workflows.',
-    icon: '&#128295;',
   },
   {
     title: 'Modern Tooling',
     description: 'LSP server, formatter, linter, Python bindings, WASM support, and VS Code extension.',
-    icon: '&#128736;',
   },
   {
     title: 'Open Source',
     description: 'Apache-2.0. Native binary, Python wheel, and WebAssembly. Distributed from GitHub Releases.',
-    icon: '&#9989;',
   },
 ];
 ---
@@ -42,11 +32,10 @@ const features = [
       Everything you need to bridge Modelica and modern scientific computing.
     </p>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {features.map(({ title, description, icon }) => (
-        <div class="group p-6 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors">
-          <div class="text-3xl mb-4" set:html={icon} />
-          <h3 class="text-lg font-semibold text-text mb-2">{title}</h3>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
+      {features.map(({ title, description }) => (
+        <div class="group border-l-2 border-border pl-5 hover:border-accent transition-colors">
+          <h3 class="text-lg font-semibold text-text mb-1">{title}</h3>
           <p class="text-sm text-text-muted leading-relaxed">{description}</p>
         </div>
       ))}

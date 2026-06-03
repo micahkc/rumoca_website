@@ -269,10 +269,13 @@ export default function SimulationApp() {
       const snow = sceneRef.current.getObjectByName('snowParticles');
       if (snow?.userData.update) snow.userData.update();
 
-      // Camera follow
+      // Animate T-Rex (forest)
+      const trex = sceneRef.current.getObjectByName('trex');
+      if (trex?.userData.update) trex.userData.update();
+
+      // Camera follow – lock target directly to drone position
       const target = camTargetRef.current;
-      const camPos = getCameraTarget(source, aircraftTypeRef.current);
-      target.lerp(camPos, 0.05);
+      target.copy(getCameraTarget(source, aircraftTypeRef.current));
       const dist = camDistRef.current;
       const angle = camAngleRef.current;
       const elev = camElevRef.current;
@@ -363,6 +366,8 @@ export default function SimulationApp() {
     buildScene(environment, aircraftType, mode);
   }, [environment, aircraftType, buildScene]);
 
+  const [showAttribution, setShowAttribution] = useState(false);
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <RealTimeViewer
@@ -390,6 +395,59 @@ export default function SimulationApp() {
         mode={simMode}
         connected={sourceRef.current?.connected ?? false}
       />
+      {/* Attribution info button */}
+      <button
+        onClick={() => setShowAttribution(!showAttribution)}
+        style={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.3)',
+          background: 'rgba(0,0,0,0.5)',
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: 14,
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 20,
+        }}
+        title="Attribution"
+      >
+        i
+      </button>
+      {showAttribution && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 44,
+            left: 10,
+            background: 'rgba(0,0,0,0.8)',
+            color: 'rgba(255,255,255,0.9)',
+            padding: '10px 14px',
+            borderRadius: 8,
+            fontSize: 12,
+            lineHeight: 1.6,
+            maxWidth: 300,
+            zIndex: 20,
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}
+        >
+          <div style={{ fontWeight: 'bold', marginBottom: 4 }}>3D Model Credits</div>
+          <div>"T-Rex" by Quaternius (CC0 1.0)</div>
+          <div>"Black Bear" by Poly by Google (CC-BY 3.0)</div>
+          <div>"Kangaroo" by Poly by Google (CC-BY 3.0)</div>
+          <div>"Penguin" by Poly by Google (CC-BY 3.0)</div>
+          <div>"Igloo" by Poly by Google (CC-BY 3.0)</div>
+          <div style={{ marginTop: 6, opacity: 0.6, fontSize: 11 }}>
+            Models from <a href="https://poly.pizza" target="_blank" rel="noopener noreferrer" style={{ color: '#88bbff' }}>poly.pizza</a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

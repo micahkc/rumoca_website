@@ -1,0 +1,45 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+
+const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
+const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
+const cardDescClass = "text-sm text-text-muted mt-1";
+---
+
+<TutorialLayout
+  title="3D Visualization"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: '3D Visualization' },
+  ]}
+  next={{ label: 'Bouncing Ball 3D', href: '/tutorials/visualization/bouncing-ball-3d' }}
+>
+  <p class="text-text-muted text-lg mb-6 leading-relaxed">
+    Plots are great for analysis, but sometimes you need to <em>see</em> the physics.
+    Rumoca includes a built-in 3D viewer powered by Three.js that lets you map simulation
+    state directly to interactive scenes &mdash; watch a pendulum swing, a satellite orbit,
+    or a ball bounce in real time as the solver steps forward.
+  </p>
+  <p class="text-text-muted text-lg mb-12 leading-relaxed">
+    The viewer API is intentionally simple: an <code class="font-mono text-sm text-accent">onInit</code>
+    callback to set up your scene and an <code class="font-mono text-sm text-accent">onFrame</code>
+    callback to update it each timestep. You have full access to Three.js, so anything you can build
+    in a normal WebGL application &mdash; custom meshes, particle trails, procedural textures &mdash;
+    works here too. These tutorials introduce the API and show increasingly sophisticated scenes.
+  </p>
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <a href="/tutorials/visualization/bouncing-ball-3d" class={cardClass}>
+      <h3 class={cardTitleClass}>Bouncing Ball 3D</h3>
+      <p class={cardDescClass}>Your first 3D viewer. The <code class="font-mono text-xs">onInit</code>/<code class="font-mono text-xs">onFrame</code> API.</p>
+    </a>
+    <a href="/tutorials/visualization/two-body-orbit" class={cardClass}>
+      <h3 class={cardTitleClass}>Two-Body Orbit</h3>
+      <p class={cardDescClass}>Orbital mechanics with trail rendering.</p>
+    </a>
+    <a href="/tutorials/visualization/pendulum" class={cardClass}>
+      <h3 class={cardTitleClass}>Pendulum</h3>
+      <p class={cardDescClass}>Nonlinear pendulum dynamics with 3D visualization.</p>
+    </a>
+  </div>
+</TutorialLayout>

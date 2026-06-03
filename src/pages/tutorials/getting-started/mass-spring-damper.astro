@@ -1,28 +1,40 @@
 ---
 import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+import Math from '../../../components/common/Math.astro';
+import MathBlock from '../../../components/common/MathBlock.astro';
 ---
 
 <TutorialLayout
   title="Mass-Spring-Damper"
   breadcrumbs={[
     { label: 'Tutorials', href: '/tutorials' },
-    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials/getting-started' },
     { label: 'Mass-Spring-Damper' },
   ]}
   prev={{ label: 'Your First Model', href: '/tutorials/getting-started/first-model' }}
   next={{ label: 'Bouncing Ball', href: '/tutorials/getting-started/bouncing-ball' }}
 >
+  <div class="mb-6 p-4 rounded-lg border border-accent/20 bg-accent/5">
+    <h3 class="text-sm font-semibold text-accent mb-2">What you'll learn</h3>
+    <ul class="list-disc list-inside text-sm text-text-muted space-y-1">
+      <li>How parameters control physical behavior (stiffness, damping, mass)</li>
+      <li>Damped oscillations and how energy dissipates over time</li>
+      <li>How to read a second-order ODE system in Modelica</li>
+    </ul>
+  </div>
+
   <p class="text-text-muted leading-relaxed mb-4">
     The mass-spring-damper is the canonical introductory ODE system. A mass <em>m</em> is attached to a spring
     with stiffness <em>k</em> and a damper with coefficient <em>c</em>. The governing equations are:
   </p>
-  <div class="p-4 rounded-lg bg-surface border border-border font-mono text-sm text-text-muted mb-6">
-    dx/dt = v<br/>
-    m &middot; dv/dt = -k &middot; x - c &middot; v
-  </div>
+  <MathBlock tex={`\\begin{aligned}
+\\frac{dx}{dt} &= v \\\\
+m\\,\\frac{dv}{dt} &= -k\\,x - c\\,v
+\\end{aligned}`} />
   <p class="text-text-muted leading-relaxed mb-4">
-    In Modelica, this is expressed naturally. Try compiling the model below with different backends.
+    In Modelica, this is expressed naturally. Simulate the model below and watch the position oscillate
+    and decay as the damper removes energy from the system.
   </p>
 
   <ModelWorkbench
@@ -37,60 +49,21 @@ equation
 end MassSpringDamper;`}
     modelName="MassSpringDamper"
     tEnd={10}
-    defaultScript={`ctx.onInit = (api) => {
-  const { THREE, state } = api;
-  state.scene.background = new THREE.Color(0x101010);
-  const light = new THREE.DirectionalLight(0xffffff, 1.0);
-  light.position.set(3, 4, 2);
-  state.scene.add(light);
-  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
-  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
-  // Wall anchor
-  const wall = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 1.5, 1.5),
-    new THREE.MeshStandardMaterial({ color: 0x666666 })
-  );
-  wall.position.set(-2, 0.75, 0);
-  state.scene.add(wall);
-  // Mass block
-  state.mass = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.5, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0xf0732e })
-  );
-  state.mass.position.set(0, 0.25, 0);
-  state.scene.add(state.mass);
-  // Spring line
-  state.spring = new THREE.Line(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x15b7e7 })
-  );
-  state.scene.add(state.spring);
-};
-ctx.onFrame = (api) => {
-  const x = api.getValue("x", api.sampleIndex);
-  const pos = Number.isFinite(x) ? x : 0;
-  if (api.state.mass) api.state.mass.position.x = pos;
-  if (api.state.spring) {
-    const pts = [];
-    const segs = 20;
-    const amp = 0.15;
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs;
-      const sx = -1.9 + t * (pos + 0.25 - (-1.9));
-      const sy = 0.25 + (i > 0 && i < segs ? amp * Math.sin(i * Math.PI) * (i % 2 ? 1 : -1) : 0);
-      pts.push(new api.THREE.Vector3(sx, sy, 0));
-    }
-    api.state.spring.geometry.dispose();
-    api.state.spring.geometry = new api.THREE.BufferGeometry().setFromPoints(pts);
-  }
-};`}
   />
 
-  <h2 class="text-xl font-semibold text-text mt-12 mb-4">Understanding the Output</h2>
-  <p class="text-text-muted leading-relaxed">
-    In the CasADi output, <code class="font-mono text-sm text-accent">x</code> is the state vector
-    containing position and velocity,
-    <code class="font-mono text-sm text-accent">p</code> contains the parameters (k, c, m), and the ODE function
-    maps (x, p) &rarr; dx/dt. You can use this directly with CasADi integrators or optimal control solvers.
+  <h2 class="text-xl font-semibold text-text mt-12 mb-4">Understanding the results</h2>
+  <p class="text-text-muted leading-relaxed mb-4">
+    With the default parameters, the system is <strong class="text-text">underdamped</strong> &mdash; position
+    oscillates while the amplitude decays exponentially. The damper converts kinetic energy into heat, so
+    each swing is smaller than the last. Toggle <em>v</em> in the plot legend to see the velocity
+    lagging position by roughly a quarter cycle, a hallmark of oscillatory systems.
   </p>
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Things to try</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2">
+    <li>Set <code class="font-mono text-sm text-accent">c = 0</code> to remove damping entirely &mdash; the system oscillates forever.</li>
+    <li>Increase <code class="font-mono text-sm text-accent">c</code> to <code class="font-mono text-sm text-accent">3.0</code> to see <strong class="text-text">overdamped</strong> behavior (no oscillation, slow return to zero).</li>
+    <li>Find the <strong class="text-text">critically damped</strong> value: <Math tex={`c = 2\\sqrt{km}`} /> = 2.0 with the defaults. This is the fastest return to zero without overshooting.</li>
+    <li>Double the spring stiffness <code class="font-mono text-sm text-accent">k</code> &mdash; the oscillation frequency increases.</li>
+  </ul>
 </TutorialLayout>

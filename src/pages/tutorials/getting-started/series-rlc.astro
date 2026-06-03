@@ -1,23 +1,42 @@
 ---
 import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+import MathBlock from '../../../components/common/MathBlock.astro';
 ---
 
 <TutorialLayout
   title="Series RLC Circuit"
   breadcrumbs={[
     { label: 'Tutorials', href: '/tutorials' },
-    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials/getting-started' },
     { label: 'Series RLC' },
   ]}
-  prev={{ label: 'RC Circuit', href: '/tutorials/getting-started/rc-circuit' }}
-  next={{ label: 'Bouncing Ball 3D', href: '/tutorials/visualization/bouncing-ball-3d' }}
+  prev={{ label: 'Van der Pol', href: '/tutorials/getting-started/van-der-pol' }}
+  next={{ label: 'Circuit Components', href: '/tutorials/getting-started/circuit-components' }}
 >
+  <div class="mb-6 p-4 rounded-lg border border-accent/20 bg-accent/5">
+    <h3 class="text-sm font-semibold text-accent mb-2">What you'll learn</h3>
+    <ul class="list-disc list-inside text-sm text-text-muted space-y-1">
+      <li>How electrical circuits map to the same ODE structures as mechanical systems</li>
+      <li>Underdamped oscillation in a different physical domain</li>
+      <li>The effect of resistance, inductance, and capacitance on transient response</li>
+    </ul>
+  </div>
+
   <p class="text-text-muted leading-relaxed mb-4">
-    Second-order RLC circuit exhibiting underdamped oscillation. Current and voltage ring as energy
-    sloshes between inductor and capacitor. The 3D view shows the
-    <code class="font-mono text-sm text-accent">i<sub>L</sub></code> vs
-    <code class="font-mono text-sm text-accent">V<sub>c</sub></code> phase portrait.
+    A series RLC circuit driven by a step voltage source. The inductor and capacitor trade energy back
+    and forth, producing oscillating current and voltage &mdash; the electrical analogue of the
+    mass-spring-damper. The resistor dissipates energy, damping the oscillation over time.
+  </p>
+
+  <MathBlock tex={`\\begin{aligned}
+L\\,\\frac{di_L}{dt} &= V_0 - R\\,i_L - V_c \\\\
+C\\,\\frac{dV_c}{dt} &= i_L
+\\end{aligned}`} />
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    If you squint, this is the same structure as the mass-spring-damper: inductance plays the role of mass,
+    capacitance is the inverse of stiffness, and resistance is damping. Simulate to see the transient response.
   </p>
 
   <ModelWorkbench
@@ -35,50 +54,13 @@ equation
 end SeriesRLC;`}
     modelName="SeriesRLC"
     tEnd={0.5}
-    defaultScript={`ctx.onInit = (api) => {
-  const { THREE, state } = api;
-  state.scene.background = new THREE.Color(0x101010);
-  const light = new THREE.DirectionalLight(0xffffff, 1.0);
-  light.position.set(2, 4, 3);
-  state.scene.add(light);
-  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
-  state.scene.add(new THREE.GridHelper(12, 24, 0x2f4f63, 0x2a2a2a));
-  // Phase plane
-  const planeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), planeMat);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = 0.0;
-  state.scene.add(plane);
-  // Particle
-  state.particle = new THREE.Mesh(
-    new THREE.SphereGeometry(0.12, 24, 16),
-    new THREE.MeshStandardMaterial({ color: 0xffa500 })
-  );
-  state.particle.position.y = 0.1;
-  state.scene.add(state.particle);
-  // Trail
-  state.trailPoints = [];
-  state.trail = new THREE.Line(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.7 })
-  );
-  state.scene.add(state.trail);
-  state.scaleI = 3.0;
-  state.scaleV = 0.4;
-};
-ctx.onFrame = (api) => {
-  const iL = api.getValue("iL", api.sampleIndex);
-  const Vc = api.getValue("Vc", api.sampleIndex);
-  const ix = Number.isFinite(iL) ? iL * api.state.scaleI : 0;
-  const vz = Number.isFinite(Vc) ? Vc * api.state.scaleV : 0;
-  if (api.state.particle) {
-    api.state.particle.position.x = ix;
-    api.state.particle.position.z = vz;
-    api.state.trailPoints.push(new api.THREE.Vector3(ix, 0.05, vz));
-    if (api.state.trailPoints.length > 1000) api.state.trailPoints.shift();
-    api.state.trail.geometry.dispose();
-    api.state.trail.geometry = new api.THREE.BufferGeometry().setFromPoints(api.state.trailPoints);
-  }
-};`}
   />
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Things to try</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2">
+    <li>Increase <code class="font-mono text-sm text-accent">R</code> to <code class="font-mono text-sm text-accent">50</code> &mdash; the circuit becomes overdamped and the capacitor charges without ringing.</li>
+    <li>Set <code class="font-mono text-sm text-accent">R = 0</code> for an ideal LC circuit &mdash; the oscillation never decays.</li>
+    <li>Try <code class="font-mono text-sm text-accent">C = 1e-4</code> &mdash; smaller capacitance means faster oscillations (higher natural frequency).</li>
+    <li>Compare the electrical analogy: <em>L</em> &harr; mass, <em>1/C</em> &harr; stiffness, <em>R</em> &harr; damping coefficient.</li>
+  </ul>
 </TutorialLayout>

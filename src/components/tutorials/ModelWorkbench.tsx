@@ -28,8 +28,6 @@ interface Backend {
 
 const JSON_BACKEND = { name: '__json__', label: 'JSON DAE IR' };
 
-type ViewTab = 'plot' | '3d';
-
 export default function ModelWorkbench({
   initialSource,
   modelName,
@@ -56,7 +54,6 @@ export default function ModelWorkbench({
   const [simulating, setSimulating] = useState(false);
   const [selectedVars, setSelectedVars] = useState<Set<number>>(new Set());
   const [playbackIndex, setPlaybackIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<ViewTab>('plot');
 
   // Simulation settings
   const [tEnd, setTEnd] = useState(initialTEnd);
@@ -146,11 +143,6 @@ export default function ModelWorkbench({
   }, []);
 
   const isModified = source !== initialSource;
-
-  const tabStyle = (tab: ViewTab) => ({
-    borderBottom: activeTab === tab ? '2px solid var(--color-teal, #15b7e7)' : '2px solid transparent',
-    color: activeTab === tab ? 'var(--color-text)' : 'var(--color-text-muted)',
-  });
 
   return (
     <div className="my-6 rounded-xl border overflow-hidden" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
@@ -246,26 +238,6 @@ export default function ModelWorkbench({
         />
       </div>
 
-      {/* Tab bar */}
-      {result && (
-        <div className="flex gap-4 px-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <button
-            onClick={() => setActiveTab('plot')}
-            className="py-2 text-sm font-medium transition-colors"
-            style={tabStyle('plot')}
-          >
-            Plot
-          </button>
-          <button
-            onClick={() => setActiveTab('3d')}
-            className="py-2 text-sm font-medium transition-colors"
-            style={tabStyle('3d')}
-          >
-            3D Viewer
-          </button>
-        </div>
-      )}
-
       {/* Sim error */}
       {simError && (
         <div className="px-4 py-3">
@@ -282,7 +254,7 @@ export default function ModelWorkbench({
       )}
 
       {/* Content panels */}
-      {result && activeTab === 'plot' && (
+      {result && (
         <PlotPanel
           result={result}
           selectedVars={selectedVars}
@@ -291,7 +263,7 @@ export default function ModelWorkbench({
         />
       )}
 
-      {result && activeTab === '3d' && (
+      {result && defaultScript && (
         <Viewer3DPanel
           result={result}
           playbackIndex={playbackIndex}

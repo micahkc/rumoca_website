@@ -1,22 +1,46 @@
 ---
 import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+import Math from '../../../components/common/Math.astro';
+import MathBlock from '../../../components/common/MathBlock.astro';
 ---
 
 <TutorialLayout
   title="Van der Pol Oscillator"
   breadcrumbs={[
     { label: 'Tutorials', href: '/tutorials' },
-    { label: 'Getting Started', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials/getting-started' },
     { label: 'Van der Pol' },
   ]}
-  prev={{ label: 'Pendulum', href: '/tutorials/getting-started/pendulum' }}
-  next={{ label: 'RC Circuit', href: '/tutorials/getting-started/rc-circuit' }}
+  prev={{ label: 'Bouncing Ball', href: '/tutorials/getting-started/bouncing-ball' }}
+  next={{ label: 'Series RLC', href: '/tutorials/getting-started/series-rlc' }}
 >
+  <div class="mb-6 p-4 rounded-lg border border-accent/20 bg-accent/5">
+    <h3 class="text-sm font-semibold text-accent mb-2">What you'll learn</h3>
+    <ul class="list-disc list-inside text-sm text-text-muted space-y-1">
+      <li>Nonlinear dynamics and the concept of a limit cycle</li>
+      <li>How a single parameter can change the character of oscillations</li>
+      <li>Why initial conditions don't matter for the steady-state behavior</li>
+    </ul>
+  </div>
+
   <p class="text-text-muted leading-relaxed mb-4">
-    The Van der Pol oscillator is a classic example of a nonlinear system exhibiting limit cycle behavior.
-    The parameter <em>&mu;</em> controls the nonlinearity &mdash; larger values produce more pronounced
-    relaxation oscillations.
+    The Van der Pol oscillator is a classic nonlinear system. Unlike the mass-spring-damper, it has a
+    <strong class="text-text">limit cycle</strong> &mdash; regardless of where you start, the system
+    settles into the same periodic orbit. The parameter <em>&mu;</em> controls the strength of the
+    nonlinearity: small values give near-sinusoidal oscillations, while large values produce sharp
+    <strong class="text-text">relaxation oscillations</strong> with long plateaus and fast transitions.
+  </p>
+
+  <MathBlock tex={`\\begin{aligned}
+\\frac{dx}{dt} &= y \\\\
+\\frac{dy}{dt} &= \\mu(1 - x^2)\\,y - x
+\\end{aligned}`} />
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    The nonlinear damping term <Math tex="\mu(1 - x^2)\,y" /> is the key: when <Math tex="|x| < 1" /> it adds energy
+    (negative damping), and when <Math tex="|x| > 1" /> it removes energy (positive damping). This push-pull is
+    what creates the stable limit cycle.
   </p>
 
   <ModelWorkbench
@@ -31,41 +55,13 @@ equation
 end VanDerPol;`}
     modelName="VanDerPol"
     tEnd={20}
-    defaultScript={`ctx.onInit = (api) => {
-  const { THREE, state } = api;
-  state.scene.background = new THREE.Color(0x101010);
-  const light = new THREE.DirectionalLight(0xffffff, 0.8);
-  light.position.set(2, 4, 3);
-  state.scene.add(light);
-  state.scene.add(new THREE.AmbientLight(0x404040, 0.9));
-  state.scene.add(new THREE.GridHelper(8, 16, 0x2f4f63, 0x2a2a2a));
-  // Phase-space tracer particle
-  state.particle = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 24, 16),
-    new THREE.MeshStandardMaterial({ color: 0xf0732e, emissive: 0xf0732e, emissiveIntensity: 0.3 })
-  );
-  state.scene.add(state.particle);
-  // Trail
-  state.trailPts = [];
-  state.trail = new THREE.Line(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x15b7e7, transparent: true, opacity: 0.7 })
-  );
-  state.scene.add(state.trail);
-};
-ctx.onFrame = (api) => {
-  const x = api.getValue("x", api.sampleIndex);
-  const y = api.getValue("y", api.sampleIndex);
-  const px = Number.isFinite(x) ? x : 0;
-  const py = Number.isFinite(y) ? y : 0;
-  if (api.state.particle) api.state.particle.position.set(px, 0.05, py);
-  const pts = api.state.trailPts;
-  pts.push(new api.THREE.Vector3(px, 0.02, py));
-  if (pts.length > 800) pts.shift();
-  if (api.state.trail) {
-    api.state.trail.geometry.dispose();
-    api.state.trail.geometry = new api.THREE.BufferGeometry().setFromPoints(pts);
-  }
-};`}
   />
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Things to try</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2">
+    <li>Set <code class="font-mono text-sm text-accent">mu = 0.1</code> &mdash; the oscillation looks nearly sinusoidal.</li>
+    <li>Crank it up to <code class="font-mono text-sm text-accent">mu = 5.0</code> &mdash; notice the sharp sawtooth shape of relaxation oscillations.</li>
+    <li>Change the initial conditions to <code class="font-mono text-sm text-accent">x(start = 0.01)</code> and <code class="font-mono text-sm text-accent">y(start = 0.01)</code> &mdash; the system still converges to the same limit cycle, just takes longer to get there.</li>
+    <li>Try <code class="font-mono text-sm text-accent">x(start = 5)</code> to start outside the limit cycle &mdash; the amplitude shrinks instead of growing.</li>
+  </ul>
 </TutorialLayout>

@@ -1,0 +1,17 @@
+---
+import katex from 'katex';
+
+interface Props {
+  tex: string;
+}
+
+const { tex } = Astro.props;
+
+const html = katex.renderToString(tex, {
+  displayMode: false,
+  throwOnError: false,
+  output: 'html',
+});
+---
+
+<span class="katex-inline" set:html={html} />

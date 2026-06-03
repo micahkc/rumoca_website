@@ -1,0 +1,109 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import ModelWorkbench from '../../../components/tutorials/ModelWorkbench';
+---
+
+<TutorialLayout
+  title="Circuit Components"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Getting Started', href: '/tutorials/getting-started' },
+    { label: 'Circuit Components' },
+  ]}
+  prev={{ label: 'Series RLC', href: '/tutorials/getting-started/series-rlc' }}
+  next={{ label: 'Bouncing Ball 3D', href: '/tutorials/visualization/bouncing-ball-3d' }}
+>
+  <div class="mb-6 p-4 rounded-lg border border-accent/20 bg-accent/5">
+    <h3 class="text-sm font-semibold text-accent mb-2">What you'll learn</h3>
+    <ul class="list-disc list-inside text-sm text-text-muted space-y-1">
+      <li>Component-based modeling with Modelica packages</li>
+      <li>Connectors, <code class="font-mono text-xs">flow</code> variables, and <code class="font-mono text-xs">connect</code> equations</li>
+      <li>Inheritance with <code class="font-mono text-xs">extends</code> to share common structure</li>
+    </ul>
+  </div>
+
+  <p class="text-text-muted leading-relaxed mb-4">
+    So far every model has been a flat list of equations. Real Modelica code is
+    <strong class="text-text">component-based</strong> &mdash; you build reusable parts and wire them together.
+    This tutorial models the same RC circuit from first principles using connectors, inheritance, and
+    connect equations.
+  </p>
+
+  <h2 class="text-xl font-semibold text-text mb-3">Key Modelica concepts</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2 mb-6">
+    <li><strong class="text-text">connector Pin</strong> &mdash; defines an electrical interface with voltage (across variable) and current (<code class="font-mono text-sm text-accent">flow</code> variable). Kirchhoff&rsquo;s current law is enforced automatically at every connection point.</li>
+    <li><strong class="text-text">extends TwoPin</strong> &mdash; Resistor, Capacitor, and VoltageSource all inherit the two-pin interface, avoiding duplicated boilerplate.</li>
+    <li><strong class="text-text">connect(a, b)</strong> &mdash; equates across variables and sums flow variables. The topology of your circuit is declared, not hand-wired with equations.</li>
+  </ul>
+
+  <ModelWorkbench
+    client:only="react"
+    initialSource={`package Circuit
+
+connector Pin
+  Real v "voltage";
+  flow Real i "current";
+end Pin;
+
+model TwoPin
+  Pin p, n;
+  Real v;
+  Real i;
+equation
+  v = p.v - n.v;
+  i = p.i;
+  p.i + n.i = 0;
+end TwoPin;
+
+model Ground
+  Pin p;
+equation
+  p.v = 0;
+end Ground;
+
+model VoltageSource
+  extends TwoPin;
+  parameter Real V = 5.0 "V";
+equation
+  v = V;
+end VoltageSource;
+
+model Resistor
+  extends TwoPin;
+  parameter Real R = 2.5 "Resistance";
+equation
+  v = R * i;
+end Resistor;
+
+model Capacitor
+  extends TwoPin;
+  parameter Real C = 1e-2 "Capacitance";
+equation
+  i = C * der(v);
+end Capacitor;
+
+model Test
+  VoltageSource src;
+  Ground gnd;
+  Resistor res;
+  Capacitor cap;
+equation
+  connect(src.p, res.p);
+  connect(res.n, cap.p);
+  connect(cap.n, src.n);
+  connect(src.n, gnd.p);
+end Test;
+
+end Circuit;`}
+    modelName="Circuit.Test"
+    tEnd={0.1}
+  />
+
+  <h2 class="text-xl font-semibold text-text mt-10 mb-3">Things to try</h2>
+  <ul class="list-disc list-inside text-text-muted leading-relaxed space-y-2">
+    <li>Change the resistance <code class="font-mono text-sm text-accent">R = 2.5</code> to a smaller value and watch the capacitor charge faster.</li>
+    <li>Add an inductor component modeled after the Resistor (hint: <code class="font-mono text-sm text-accent">v = L * der(i)</code>) and wire it in series to build a full RLC circuit.</li>
+    <li>Try adding a second resistor in parallel with the capacitor &mdash; you only need a new instance and two <code class="font-mono text-sm text-accent">connect</code> statements.</li>
+    <li>Notice how the flat RLC model from the previous tutorial and this component model produce equivalent results &mdash; the component approach scales better to complex systems.</li>
+  </ul>
+</TutorialLayout>
