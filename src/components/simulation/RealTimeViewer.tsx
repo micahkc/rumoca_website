@@ -26,7 +26,7 @@ export default function RealTimeViewer({ rendererRef, sceneRef, cameraRef }: Rea
       60,
       container.clientWidth / container.clientHeight,
       0.1,
-      500,
+      2500,
     );
     camera.position.set(2, 3, 5);
     camera.lookAt(0, 0, 0);
@@ -35,6 +35,7 @@ export default function RealTimeViewer({ rendererRef, sceneRef, cameraRef }: Rea
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 

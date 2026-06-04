@@ -1,0 +1,116 @@
+name: Deploy to GitHub Pages
+
+# Triggers:
+#   - push to main:        site-only changes, rebuild with whatever rumoca
+#                          release is currently latest.
+#   - workflow_dispatch:   manual rebuild + redeploy.
+#   - repository_dispatch (type=rumoca-released): fired by CogniPilot/rumoca
+#                          after publishing a new release. Optionally pass a
+#                          specific tag in client_payload.tag; otherwise the
+#                          latest release with a rumoca-web-*.tar.gz asset is
+#                          used.
+#
+# Expected tarball layout (rumoca-web-<version>.tar.gz):
+#   pkg/                  WASM blob + JS bindings (rumoca_bg.wasm, rumoca.js,
+#                         rumoca_worker.js, parse_worker.js)
+#   editors/wasm/         coi-serviceworker.js, rumoca.png
+#   user-guide/           mdBook output, served at /user-guide
+#   dev-guide/            mdBook output, served at /dev-guide
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [rumoca-released]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Determine rumoca release tag
+        id: rumoca
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.client_payload.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release list --repo CogniPilot/rumoca --limit 20 --json tagName,assets \
+              --jq '[.[] | select(.assets[]?.name | test("^rumoca-web-.*\\.tar\\.gz$"))][0].tagName // ""')
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ -n "$TAG" ]; then
+            echo "Using rumoca release: $TAG"
+          else
+            echo "::warning::No rumoca release with rumoca-web-*.tar.gz asset found."
+            echo "Falling back to artifacts already committed in public/ — docs and WASM may be stale."
+          fi
+
+      - name: Download and extract rumoca web tarball
+        if: steps.rumoca.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.rumoca.outputs.tag }}
+        run: |
+          mkdir -p /tmp/rumoca-extract
+          gh release download "$TAG" \
+            --repo CogniPilot/rumoca \
+            --pattern 'rumoca-web-*.tar.gz' \
+            --dir /tmp/rumoca-extract
+          tar -xzf /tmp/rumoca-extract/rumoca-web-*.tar.gz -C /tmp/rumoca-extract
+          echo "RUMOCA_DIR=/tmp/rumoca-extract" >> "$GITHUB_ENV"
+
+      - name: Copy mdBook docs into public/
+        if: steps.rumoca.outputs.tag != ''
+        run: |
+          for guide in user-guide dev-guide; do
+            src="$RUMOCA_DIR/$guide"
+            if [ -d "$src" ]; then
+              rm -rf "public/$guide"
+              cp -r "$src" "public/$guide"
+              echo "  ✓ $guide → public/$guide"
+            else
+              echo "::warning::Tarball missing $guide/ — /$guide will 404"
+            fi
+          done
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        env:
+          # Strict sync only when we actually have a release source; otherwise
+          # let prebuild fall back to committed public/wasm contents.
+          SYNC_STRICT: ${{ steps.rumoca.outputs.tag != '' && 'true' || 'false' }}
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

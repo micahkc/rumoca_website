@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { SimulationSource } from '../../lib/simulation-source';
-import type { AircraftRenderer } from './quadrotor';
+import type { AircraftRenderer } from './types';
 
 // Sport Cub fixed-wing visualization — white/blue livery
 // Adapted from /home/micah/Research/modelica_models/.rumoca/models/by-id/sportcubflight_9eb3dd6b/states_time.js

@@ -47,16 +47,24 @@ export class WasmStepper {
     /**
      * Compile a Modelica model and create a stepper ready for interactive stepping.
      *
-     * `source` is the full Modelica source text, `model_name` is the class to simulate.
+     * `source` is the full Modelica source text, `model_name` is the class to
+     * simulate. `solver` is an optional string accepted by
+     * [`SimSolverMode::from_external_name`] — common values are `"bdf"`,
+     * `"rk-like"`, or `"auto"`. When omitted, BDF is used (the previous
+     * behavior). For DAEs whose initial Jacobian trips BDF's sparse-LU,
+     * pass `"rk-like"` to match what the CLI uses for the same model.
      * @param {string} source
      * @param {string} model_name
+     * @param {string | null} [solver]
      */
-    constructor(source, model_name) {
+    constructor(source, model_name, solver) {
         const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(model_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.wasmstepper_new(ptr0, len0, ptr1, len1);
+        var ptr2 = isLikeNone(solver) ? 0 : passStringToWasm0(solver, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len2 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmstepper_new(ptr0, len0, ptr1, len1, ptr2, len2);
         if (ret[2]) {
             throw takeFromExternrefTable0(ret[1]);
         }
@@ -65,7 +73,8 @@ export class WasmStepper {
         return this;
     }
     /**
-     * Reset the simulation to initial conditions.
+     * Reset the simulation to initial conditions, reusing the solver mode
+     * chosen at construction.
      */
     reset() {
         const ret = wasm.wasmstepper_reset(this.__wbg_ptr);
@@ -185,6 +194,75 @@ export function compile(source, model_name) {
 }
 
 /**
+ * @param {string} source
+ * @param {string} model_name
+ * @param {string} source_roots_json
+ * @returns {string}
+ */
+export function compile_check_with_source_roots(source, model_name, source_roots_json) {
+    let deferred5_0;
+    let deferred5_1;
+    try {
+        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(model_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(source_roots_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.compile_check_with_source_roots(ptr0, len0, ptr1, len1, ptr2, len2);
+        var ptr4 = ret[0];
+        var len4 = ret[1];
+        if (ret[3]) {
+            ptr4 = 0; len4 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred5_0 = ptr4;
+        deferred5_1 = len4;
+        return getStringFromWasm0(ptr4, len4);
+    } finally {
+        wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+    }
+}
+
+/**
+ * Strict compile-check using loaded source roots with explicit behavior options.
+ *
+ * This validates requested-model compilation without producing full DAE output.
+ * Option semantics are identical to `compile_with_source_roots_with_options`.
+ * @param {string} source
+ * @param {string} model_name
+ * @param {string} source_roots_json
+ * @param {string} compile_options_json
+ * @returns {string}
+ */
+export function compile_check_with_source_roots_with_options(source, model_name, source_roots_json, compile_options_json) {
+    let deferred6_0;
+    let deferred6_1;
+    try {
+        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(model_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(source_roots_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(compile_options_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ret = wasm.compile_check_with_source_roots_with_options(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        var ptr5 = ret[0];
+        var len5 = ret[1];
+        if (ret[3]) {
+            ptr5 = 0; len5 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred6_0 = ptr5;
+        deferred6_1 = len5;
+        return getStringFromWasm0(ptr5, len5);
+    } finally {
+        wasm.__wbindgen_free(deferred6_0, deferred6_1, 1);
+    }
+}
+
+/**
  * Compile Modelica source code to DAE JSON (alias for worker compatibility).
  * @param {string} source
  * @param {string} model_name
@@ -276,6 +354,46 @@ export function compile_with_source_roots(source, model_name, source_roots_json)
 }
 
 /**
+ * Compile using loaded source roots with explicit compile behavior options.
+ *
+ * `compile_options_json` example:
+ * `{"allowNonParamEvaluateAnnotation":true,"allowMultiWhenSingleAssign":false}`
+ *
+ * Strict behavior remains default when this function is not used (or options are false).
+ * @param {string} source
+ * @param {string} model_name
+ * @param {string} source_roots_json
+ * @param {string} compile_options_json
+ * @returns {string}
+ */
+export function compile_with_source_roots_with_options(source, model_name, source_roots_json, compile_options_json) {
+    let deferred6_0;
+    let deferred6_1;
+    try {
+        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(model_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(source_roots_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(compile_options_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ret = wasm.compile_with_source_roots_with_options(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        var ptr5 = ret[0];
+        var len5 = ret[1];
+        if (ret[3]) {
+            ptr5 = 0; len5 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred6_0 = ptr5;
+        deferred6_1 = len5;
+        return getStringFromWasm0(ptr5, len5);
+    } finally {
+        wasm.__wbindgen_free(deferred6_0, deferred6_1, 1);
+    }
+}
+
+/**
  * @param {string} uris_json
  * @returns {Uint8Array}
  */
@@ -309,11 +427,11 @@ export function get_build_time_utc() {
 }
 
 /**
- * Get the built-in codegen templates bundled with the WASM runtime.
+ * Get the built-in codegen targets bundled with the WASM runtime.
  * @returns {any}
  */
-export function get_builtin_templates() {
-    const ret = wasm.get_builtin_templates();
+export function get_builtin_targets() {
+    const ret = wasm.get_builtin_targets();
     return ret;
 }
 
@@ -848,32 +966,29 @@ export function parse_source_root_file(source, filename) {
 }
 
 /**
- * Render a Jinja template with DAE data.
  * @param {string} dae_json
- * @param {string} template
- * @returns {string}
+ * @param {string} model_name
+ * @param {string} target
+ * @param {string} manifest_source
+ * @param {string} templates_json
+ * @returns {any}
  */
-export function render_template(dae_json, template) {
-    let deferred4_0;
-    let deferred4_1;
-    try {
-        const ptr0 = passStringToWasm0(dae_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(template, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.render_template(ptr0, len0, ptr1, len1);
-        var ptr3 = ret[0];
-        var len3 = ret[1];
-        if (ret[3]) {
-            ptr3 = 0; len3 = 0;
-            throw takeFromExternrefTable0(ret[2]);
-        }
-        deferred4_0 = ptr3;
-        deferred4_1 = len3;
-        return getStringFromWasm0(ptr3, len3);
-    } finally {
-        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+export function render_target(dae_json, model_name, target, manifest_source, templates_json) {
+    const ptr0 = passStringToWasm0(dae_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(model_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(target, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(manifest_source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passStringToWasm0(templates_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ret = wasm.render_target(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
     }
+    return takeFromExternrefTable0(ret[0]);
 }
 
 /**
@@ -973,16 +1088,25 @@ export function sync_project_sources(project_sources_json) {
 }
 
 /**
- * Initialize the thread pool (no-op, kept for worker API compatibility).
+ * Fallback thread-pool initializer for non-threaded builds.
  * @param {number} _num_threads
+ * @returns {boolean}
  */
 export function wasm_init(_num_threads) {
-    wasm.wasm_init(_num_threads);
+    const ret = wasm.wasm_init(_num_threads);
+    return ret !== 0;
 }
 
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
+        __wbg_String_8f0eb39a4a4c2f66: function(arg0, arg1) {
+            const ret = String(arg1);
+            const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len1 = WASM_VECTOR_LEN;
+            getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+        },
         __wbg___wbindgen_debug_string_0bc8482c6e3508ae: function(arg0, arg1) {
             const ret = debugString(arg1);
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -990,16 +1114,8 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
             getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
-        __wbg___wbindgen_is_function_0095a73b8b156f76: function(arg0) {
-            const ret = typeof(arg0) === 'function';
-            return ret;
-        },
         __wbg___wbindgen_is_undefined_9e4d92534c42d778: function(arg0) {
             const ret = arg0 === undefined;
-            return ret;
-        },
-        __wbg___wbindgen_memory_bd1fbcf21fbef3c8: function() {
-            const ret = wasm.memory;
             return ret;
         },
         __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
@@ -1007,10 +1123,6 @@ function __wbg_get_imports() {
         },
         __wbg_call_389efe28435a9388: function() { return handleError(function (arg0, arg1) {
             const ret = arg0.call(arg1);
-            return ret;
-        }, arguments); },
-        __wbg_call_9e2435421fd1e0cb: function() { return handleError(function (arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
-            const ret = arg0.call(arg1, arg2, arg3, arg4, arg5, arg6);
             return ret;
         }, arguments); },
         __wbg_error_7534b8e9a36f1ab4: function(arg0, arg1) {
@@ -1024,14 +1136,13 @@ function __wbg_get_imports() {
                 wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
             }
         },
-        __wbg_exports_86b4926134c40288: function(arg0) {
-            const ret = arg0.exports;
-            return ret;
-        },
         __wbg_get_b3ed3ad4be2bc8ac: function() { return handleError(function (arg0, arg1) {
             const ret = Reflect.get(arg0, arg1);
             return ret;
         }, arguments); },
+        __wbg_log_d483ad613d92c817: function(arg0, arg1) {
+            console.log(getStringFromWasm0(arg0, arg1));
+        },
         __wbg_new_361308b2356cecd0: function() {
             const ret = new Object();
             return ret;
@@ -1040,20 +1151,8 @@ function __wbg_get_imports() {
             const ret = new Array();
             return ret;
         },
-        __wbg_new_57c27ff3ddf5b62c: function() { return handleError(function (arg0) {
-            const ret = new WebAssembly.Module(arg0);
-            return ret;
-        }, arguments); },
         __wbg_new_8a6f238a6ece86ea: function() {
             const ret = new Error();
-            return ret;
-        },
-        __wbg_new_a4e3cab1cdd635ba: function() { return handleError(function (arg0, arg1) {
-            const ret = new WebAssembly.Instance(arg0, arg1);
-            return ret;
-        }, arguments); },
-        __wbg_new_from_slice_a3d2629dc1826784: function(arg0, arg1) {
-            const ret = new Uint8Array(getArrayU8FromWasm0(arg0, arg1));
             return ret;
         },
         __wbg_new_no_args_1c7c842f08d00ebb: function(arg0, arg1) {
@@ -1064,13 +1163,13 @@ function __wbg_get_imports() {
             const ret = Date.now();
             return ret;
         },
+        __wbg_now_ebffdf7e580f210d: function(arg0) {
+            const ret = arg0.now();
+            return ret;
+        },
         __wbg_set_3f1d0b984ed272ed: function(arg0, arg1, arg2) {
             arg0[arg1] = arg2;
         },
-        __wbg_set_6cb8631f80447a67: function() { return handleError(function (arg0, arg1, arg2) {
-            const ret = Reflect.set(arg0, arg1, arg2);
-            return ret;
-        }, arguments); },
         __wbg_set_f43e577aea94465b: function(arg0, arg1, arg2) {
             arg0[arg1 >>> 0] = arg2;
         },

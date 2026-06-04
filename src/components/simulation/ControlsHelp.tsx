@@ -1,7 +1,8 @@
-import type { InputMode } from '../../lib/input-manager';
+import type { InputMode, InputProfile } from '../../lib/input-manager';
 
 interface ControlsHelpProps {
   inputMode: InputMode;
+  profile: InputProfile;
 }
 
 /** Tiny inline SVG gamepad diagram with labeled buttons/sticks. */
@@ -64,7 +65,42 @@ function GamepadDiagram() {
   );
 }
 
-export default function ControlsHelp({ inputMode }: ControlsHelpProps) {
+function KeyboardKeys({ profile }: { profile: InputProfile }) {
+  const label = { color: '#a89070' } as const;
+  const key = { color: '#70b8e0', display: 'inline-block', minWidth: '74px' } as const;
+  if (profile === 'rover') {
+    return (
+      <>
+        <span style={key}>↑ / ↓</span> <span style={label}>Throttle</span>
+        <br />
+        <span style={key}>← / →</span> <span style={label}>Steering</span>
+        <br />
+        <span style={key}>H</span> <span style={label}>Toggle HUD</span>
+        <br />
+        <span style={key}>R</span> <span style={label}>Reset</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <span style={key}>W / S</span> <span style={label}>Throttle</span>
+      <br />
+      <span style={key}>A / D</span> <span style={label}>Yaw</span>
+      <br />
+      <span style={key}>↑ / ↓</span> <span style={label}>Roll</span>
+      <br />
+      <span style={key}>← / →</span> <span style={label}>Pitch</span>
+      <br />
+      <span style={key}>Space</span> <span style={label}>Arm / Disarm</span>
+      <br />
+      <span style={key}>H</span> <span style={label}>Toggle HUD</span>
+      <br />
+      <span style={key}>R</span> <span style={label}>Reset</span>
+    </>
+  );
+}
+
+export default function ControlsHelp({ inputMode, profile }: ControlsHelpProps) {
   return (
     <div
       style={{
@@ -89,29 +125,7 @@ export default function ControlsHelp({ inputMode }: ControlsHelpProps) {
         Input: <span>{inputMode}</span>
       </b>
       <br />
-      {inputMode === 'keyboard' ? (
-        <>
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>W / S</span>{' '}
-          <span style={{ color: '#a89070' }}>Pitch fwd/back</span>
-          <br />
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>A / D</span>{' '}
-          <span style={{ color: '#a89070' }}>Roll left/right</span>
-          <br />
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>Up / Down</span>{' '}
-          <span style={{ color: '#a89070' }}>Throttle</span>
-          <br />
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>Left / Right</span>{' '}
-          <span style={{ color: '#a89070' }}>Yaw</span>
-          <br />
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>Space</span>{' '}
-          <span style={{ color: '#a89070' }}>Arm / Disarm</span>
-          <br />
-          <span style={{ color: '#70b8e0', display: 'inline-block', minWidth: '70px' }}>R</span>{' '}
-          <span style={{ color: '#a89070' }}>Reset simulation</span>
-        </>
-      ) : (
-        <GamepadDiagram />
-      )}
+      {inputMode === 'keyboard' ? <KeyboardKeys profile={profile} /> : <GamepadDiagram />}
     </div>
   );
 }

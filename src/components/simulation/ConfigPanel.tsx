@@ -1,14 +1,11 @@
 export type EnvironmentType = 'desert' | 'forest' | 'arctic';
-export type AircraftType = 'quadrotor' | 'fixedwing';
-export type SimMode = 'wasm-controller' | 'autopilot';
+export type AircraftType = 'quadrotor' | 'fixedwing' | 'rover';
 
 interface ConfigPanelProps {
   environment: EnvironmentType;
   aircraft: AircraftType;
-  mode: SimMode;
   onEnvironmentChange: (env: EnvironmentType) => void;
   onAircraftChange: (ac: AircraftType) => void;
-  onModeChange: (mode: SimMode) => void;
   loading: boolean;
 }
 
@@ -84,10 +81,8 @@ function RadioGroup<T extends string>({
 export default function ConfigPanel({
   environment,
   aircraft,
-  mode,
   onEnvironmentChange,
   onAircraftChange,
-  onModeChange,
   loading,
 }: ConfigPanelProps) {
   return (
@@ -113,20 +108,10 @@ export default function ConfigPanel({
         options={[
           { value: 'quadrotor' as AircraftType, label: 'Quadrotor' },
           { value: 'fixedwing' as AircraftType, label: 'Fixed Wing' },
+          { value: 'rover' as AircraftType, label: 'Rover' },
         ]}
         value={aircraft}
         onChange={onAircraftChange}
-        disabled={loading}
-      />
-
-      <span style={labelStyle}>Mode</span>
-      <RadioGroup
-        options={[
-          { value: 'wasm-controller' as SimMode, label: 'WASM Controller' },
-          { value: 'autopilot' as SimMode, label: 'Autopilot (SIL)' },
-        ]}
-        value={mode}
-        onChange={onModeChange}
         disabled={loading}
       />
 

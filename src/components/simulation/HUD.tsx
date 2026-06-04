@@ -6,9 +6,12 @@ interface HUDProps {
   rc: RCState;
   inputMode: InputMode;
   status: string;
+  /** Armed flag — only meaningful when the model exposes an `armed` input
+   *  (e.g. QuadrotorAcro); pass `undefined` to hide the badge. */
+  armed?: boolean;
 }
 
-export default function HUD({ source, rc, inputMode, status }: HUDProps) {
+export default function HUD({ source, rc, inputMode, status, armed }: HUDProps) {
   const t = source?.time ?? 0;
   const px = source?.get('px') ?? 0;
   const py = source?.get('py') ?? 0;
@@ -72,12 +75,12 @@ export default function HUD({ source, rc, inputMode, status }: HUDProps) {
       <br />
       <span style={{ color: '#a89070' }}>input:</span>{' '}
       <span style={{ color: '#70b8e0', fontWeight: 'bold' }}>{inputMode}</span>
-      {source?.mode === 'autopilot' && (
+      {armed !== undefined && (
         <>
           <br />
           <span style={{ color: '#a89070' }}>armed:</span>{' '}
-          <span style={{ color: source.armed ? '#4c4' : '#c44', fontWeight: 'bold' }}>
-            {source.armed ? 'ARMED' : 'DISARMED'}
+          <span style={{ color: armed ? '#4c4' : '#c44', fontWeight: 'bold' }}>
+            {armed ? 'ARMED (Space to disarm)' : 'DISARMED (Space to arm)'}
           </span>
         </>
       )}

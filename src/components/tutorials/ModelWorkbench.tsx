@@ -111,14 +111,16 @@ export default function ModelWorkbench({
       const client = getRumocaClient();
       const raw = await client.simulate(source, modelName, tEnd, dt, solver);
       const parsed = JSON.parse(raw);
+      // Newer rumoca wraps the result in { payload, metrics }; older builds returned the payload directly.
+      const root = parsed.payload ?? parsed;
       let simResult: SimResult;
-      if (parsed.names && parsed.allData) {
-        simResult = parsed;
-      } else if (parsed.names && parsed.times && parsed.data) {
+      if (root.names && root.allData) {
+        simResult = root;
+      } else if (root.names && root.times && root.data) {
         simResult = {
-          names: parsed.names,
-          allData: [parsed.times, ...parsed.data],
-          nStates: parsed.nStates ?? 0,
+          names: root.names,
+          allData: [root.times, ...root.data],
+          nStates: root.nStates ?? 0,
         };
       } else {
         throw new Error('Unexpected simulation result format');

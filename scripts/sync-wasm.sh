@@ -1,54 +1,200 @@
 #!/usr/bin/env bash
-# Sync WASM artifacts from the rumoca repo's editors/wasm/ directory.
-# These three files are tightly coupled and must always come from the same build.
+# Sync rumoca artifacts into the website for local development and builds.
 #
-# Override the source directory by setting RUMOCA_WASM_DIR:
-#   RUMOCA_WASM_DIR=/path/to/editors/wasm npm run sync-wasm
+# Sources (all under $RUMOCA_DIR):
+#   pkg/                          WASM blob + JS bindings + workers
+#   editors/wasm/                 coi-serviceworker.js, rumoca.png
+#   examples/interactive/         drone.glb, sand_pbr/, skybox/, sim .mo sources
+#   target/cmm/CMM-v0.0.1/        LieGroup + RigidBody Modelica packages
+#
+# Resolution order for RUMOCA_DIR:
+#   1. $RUMOCA_DIR              (preferred override)
+#   2. $RUMOCA_WASM_DIR         (legacy: may point at editors/wasm subdir)
+#   3. ../development/rumoca/rumoca  (default sibling checkout)
+#
+# Strict mode (exit 1 on missing required files) is on by default in CI
+# (GitHub Actions sets CI=true). Set SYNC_STRICT=true to force it locally,
+# or SYNC_STRICT=false to disable.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Default source: sibling checkout at ../development/rumoca/rumoca/editors/wasm
-DEFAULT_SRC="$(cd "$PROJECT_DIR/../development/rumoca/rumoca/editors/wasm" 2>/dev/null && pwd || echo "")"
-WASM_SRC="${RUMOCA_WASM_DIR:-$DEFAULT_SRC}"
+DEFAULT_RUMOCA="$(cd "$PROJECT_DIR/../development/rumoca/rumoca" 2>/dev/null && pwd || echo "")"
+RUMOCA_DIR="${RUMOCA_DIR:-${RUMOCA_WASM_DIR:-$DEFAULT_RUMOCA}}"
 
-if [ -z "$WASM_SRC" ] || [ ! -d "$WASM_SRC" ]; then
-    echo "⚠ WASM source directory not found: $WASM_SRC"
-    echo "  Set RUMOCA_WASM_DIR to the path containing rumoca_bg.wasm"
+# Back-compat: legacy RUMOCA_WASM_DIR pointed at editors/wasm directly.
+case "$RUMOCA_DIR" in
+    */editors/wasm) RUMOCA_DIR="${RUMOCA_DIR%/editors/wasm}" ;;
+esac
+
+# `cargo xtask wasm build` writes artifacts to pkg/release-full-web/. Older
+# layouts dropped them straight under pkg/. Pick the freshest one that exists.
+if [ -d "$RUMOCA_DIR/pkg/release-full-web" ]; then
+    PKG_DIR="$RUMOCA_DIR/pkg/release-full-web"
+elif [ -d "$RUMOCA_DIR/pkg/release-full-web-rayon" ]; then
+    PKG_DIR="$RUMOCA_DIR/pkg/release-full-web-rayon"
+else
+    PKG_DIR="$RUMOCA_DIR/pkg"
+fi
+EDITORS_DIR="$RUMOCA_DIR/editors/wasm"
+QUADROTOR_DIR="$RUMOCA_DIR/examples/interactive/quadrotor"
+ROVER_DIR="$RUMOCA_DIR/examples/interactive/rover"
+CMM_DIR="$RUMOCA_DIR/target/cmm/CMM-v0.0.1"
+
+STRICT="${SYNC_STRICT:-${CI:-false}}"
+
+missing_dirs=()
+[ -d "$PKG_DIR" ] || missing_dirs+=("$PKG_DIR")
+[ -d "$EDITORS_DIR" ] || missing_dirs+=("$EDITORS_DIR")
+
+if [ "${#missing_dirs[@]}" -gt 0 ]; then
+    echo "⚠ rumoca source not found:"
+    printf '    %s\n' "${missing_dirs[@]}"
+    echo "  Set RUMOCA_DIR to the root of a rumoca checkout (or extracted release tarball)."
+    if [ "$STRICT" = "true" ]; then
+        echo "✗ Strict mode (CI=true or SYNC_STRICT=true): aborting"
+        exit 1
+    fi
     echo "  Skipping sync (using existing files if present)"
     exit 0
 fi
 
-# Files to sync (these change with every rumoca build)
-WASM_FILES=(rumoca_bg.wasm rumoca.js rumoca_worker.js)
-STABLE_FILES=(coi-serviceworker.js)
-IMAGE_FILES=(rumoca.svg)
+# --- WASM + service worker -------------------------------------------------
+
+PKG_FILES=(rumoca_bind_wasm_bg.wasm rumoca_bind_wasm.js rumoca_worker.js parse_worker.js)
+EDITORS_FILES=(coi-serviceworker.js)
+IMAGE_FILES=(rumoca.png)
 
 mkdir -p "$PROJECT_DIR/public/wasm" "$PROJECT_DIR/public/images"
 
-for f in "${WASM_FILES[@]}"; do
-    if [ -f "$WASM_SRC/$f" ]; then
-        cp "$WASM_SRC/$f" "$PROJECT_DIR/public/wasm/$f"
-        echo "  ✓ synced $f"
+errors=0
+
+for f in "${PKG_FILES[@]}"; do
+    if [ -f "$PKG_DIR/$f" ]; then
+        cp "$PKG_DIR/$f" "$PROJECT_DIR/public/wasm/$f"
+        echo "  ✓ pkg/$f → public/wasm/"
     else
-        echo "  ✗ missing $WASM_SRC/$f"
+        echo "  ✗ missing required: pkg/$f"
+        errors=$((errors+1))
     fi
 done
 
-for f in "${STABLE_FILES[@]}"; do
-    if [ -f "$WASM_SRC/$f" ]; then
-        cp "$WASM_SRC/$f" "$PROJECT_DIR/public/$f"
-        echo "  ✓ synced $f"
+for f in "${EDITORS_FILES[@]}"; do
+    if [ -f "$EDITORS_DIR/$f" ]; then
+        cp "$EDITORS_DIR/$f" "$PROJECT_DIR/public/$f"
+        echo "  ✓ editors/wasm/$f → public/"
+    else
+        echo "  ✗ missing required: editors/wasm/$f"
+        errors=$((errors+1))
     fi
 done
 
 for f in "${IMAGE_FILES[@]}"; do
-    if [ -f "$WASM_SRC/$f" ]; then
-        cp "$WASM_SRC/$f" "$PROJECT_DIR/public/images/$f"
-        echo "  ✓ synced $f"
+    if [ -f "$EDITORS_DIR/$f" ]; then
+        cp "$EDITORS_DIR/$f" "$PROJECT_DIR/public/images/$f"
+        echo "  ✓ editors/wasm/$f → public/images/"
     fi
 done
 
-echo "✓ WASM sync complete (source: $WASM_SRC)"
+# --- Interactive sim assets (quadrotor + rover) ----------------------------
+
+mkdir -p "$PROJECT_DIR/public/models" \
+         "$PROJECT_DIR/public/textures/sand_pbr" \
+         "$PROJECT_DIR/public/textures/skybox"
+
+sync_required_file() {
+    local src=$1 dst=$2 label=$3
+    if [ -f "$src" ]; then
+        cp "$src" "$dst"
+        echo "  ✓ $label"
+    else
+        echo "  ✗ missing required: $src"
+        errors=$((errors+1))
+    fi
+}
+
+sync_required_file "$QUADROTOR_DIR/drone.glb" "$PROJECT_DIR/public/models/drone.glb" \
+    "quadrotor/drone.glb → public/models/"
+
+if [ -d "$QUADROTOR_DIR/sand_pbr" ]; then
+    cp "$QUADROTOR_DIR"/sand_pbr/*.jpg "$PROJECT_DIR/public/textures/sand_pbr/" 2>/dev/null || true
+    echo "  ✓ quadrotor/sand_pbr/*.jpg → public/textures/sand_pbr/"
+else
+    echo "  ✗ missing required: $QUADROTOR_DIR/sand_pbr"
+    errors=$((errors+1))
+fi
+
+if [ -d "$QUADROTOR_DIR/skybox" ]; then
+    cp "$QUADROTOR_DIR"/skybox/*.jpg "$PROJECT_DIR/public/textures/skybox/" 2>/dev/null || true
+    echo "  ✓ quadrotor/skybox/*.jpg → public/textures/skybox/"
+else
+    echo "  ✗ missing required: $QUADROTOR_DIR/skybox"
+    errors=$((errors+1))
+fi
+
+# --- Modelica source generation (TS string consts) -------------------------
+
+# WasmStepper only accepts a single source string, so for QuadrotorAcro we
+# concatenate the CMM LieGroup + RigidBody packages with QuadrotorSIL.mo into
+# one source. Order matters: LieGroup before RigidBody before QuadrotorSIL.
+
+CMM_LIEGROUP="$CMM_DIR/LieGroup/package.mo"
+CMM_RIGIDBODY="$CMM_DIR/RigidBody/package.mo"
+QUADROTOR_SIL="$QUADROTOR_DIR/QuadrotorSIL.mo"
+ROVER_MO="$ROVER_DIR/Rover.mo"
+
+quadrotor_acro_ts="$PROJECT_DIR/src/data/aircraft/quadrotor-acro-model.ts"
+rover_ts="$PROJECT_DIR/src/data/aircraft/rover-model.ts"
+
+if [ -f "$CMM_LIEGROUP" ] && [ -f "$CMM_RIGIDBODY" ] && [ -f "$QUADROTOR_SIL" ]; then
+    {
+        echo "// AUTO-GENERATED by scripts/sync-wasm.sh — DO NOT EDIT BY HAND."
+        echo "// Sources concatenated for single-string WasmStepper consumption:"
+        echo "//   target/cmm/CMM-v0.0.1/LieGroup/package.mo"
+        echo "//   target/cmm/CMM-v0.0.1/RigidBody/package.mo"
+        echo "//   examples/interactive/quadrotor/QuadrotorSIL.mo"
+        echo ""
+        echo "export const QUADROTOR_ACRO_MODEL_NAME = 'QuadrotorAcro';"
+        echo ""
+        echo "export const QUADROTOR_ACRO_MODEL = String.raw\`"
+        # Escape backticks if any (defensive — current sources have none)
+        sed 's/`/\\`/g' "$CMM_LIEGROUP"
+        echo ""
+        sed 's/`/\\`/g' "$CMM_RIGIDBODY"
+        echo ""
+        sed 's/`/\\`/g' "$QUADROTOR_SIL"
+        echo "\`;"
+    } > "$quadrotor_acro_ts"
+    echo "  ✓ concatenated → src/data/aircraft/quadrotor-acro-model.ts"
+else
+    echo "  ✗ missing one of: LieGroup, RigidBody, QuadrotorSIL"
+    errors=$((errors+1))
+fi
+
+if [ -f "$ROVER_MO" ]; then
+    {
+        echo "// AUTO-GENERATED by scripts/sync-wasm.sh — DO NOT EDIT BY HAND."
+        echo "// Source: examples/interactive/rover/Rover.mo"
+        echo ""
+        echo "export const ROVER_MODEL_NAME = 'Rover';"
+        echo ""
+        echo "export const ROVER_MODEL = String.raw\`"
+        sed 's/`/\\`/g' "$ROVER_MO"
+        echo "\`;"
+    } > "$rover_ts"
+    echo "  ✓ Rover.mo → src/data/aircraft/rover-model.ts"
+else
+    echo "  ✗ missing required: $ROVER_MO"
+    errors=$((errors+1))
+fi
+
+# ---------------------------------------------------------------------------
+
+if [ "$errors" -gt 0 ]; then
+    echo "✗ Sync incomplete ($errors required file(s) missing)"
+    exit 1
+fi
+
+echo "✓ rumoca sync complete (source: $RUMOCA_DIR)"
