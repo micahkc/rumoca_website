@@ -1,0 +1,239 @@
+---
+import { Code } from 'astro:components';
+import type { RenderedCell } from '../../lib/notebook';
+
+interface Props {
+  cells: RenderedCell[];
+  colabUrl?: string;
+  githubUrl?: string;
+}
+
+const { cells, colabUrl, githubUrl } = Astro.props;
+---
+
+<div class="notebook">
+  {(colabUrl || githubUrl) && (
+    <div class="nb-badges">
+      {colabUrl && (
+        <a href={colabUrl} target="_blank" rel="noopener noreferrer" class="nb-badge">
+          <img
+            src="https://colab.research.google.com/assets/colab-badge.svg"
+            alt="Open in Colab"
+            height="20"
+          />
+        </a>
+      )}
+      {githubUrl && (
+        <a href={githubUrl} target="_blank" rel="noopener noreferrer" class="nb-badge">
+          <img
+            src="https://img.shields.io/badge/View_on-GitHub-181717?logo=github"
+            alt="View on GitHub"
+            height="20"
+          />
+        </a>
+      )}
+    </div>
+  )}
+
+  {cells.map((cell) =>
+    cell.type === 'markdown' ? (
+      <div class="nb-markdown" set:html={cell.content} />
+    ) : (
+      <div class="nb-code">
+        <div class="nb-code-header">
+          <span class="nb-code-prompt">
+            In [{cell.executionCount ?? ' '}]:
+          </span>
+        </div>
+        <Code code={cell.content} lang="python" theme="github-dark" />
+        {cell.outputs && cell.outputs.length > 0 && (
+          <div class="nb-outputs">
+            {cell.outputs.map((out) => {
+              if (out.kind === 'image-png') {
+                return <img src={out.body} alt="output" class="nb-output-image" />;
+              }
+              if (out.kind === 'image-svg') {
+                return <div class="nb-output-svg" set:html={out.body} />;
+              }
+              if (out.kind === 'html') {
+                return <div class="nb-output-html" set:html={out.body} />;
+              }
+              if (out.kind === 'latex') {
+                return <div class="nb-output-latex" set:html={out.body} />;
+              }
+              if (out.kind === 'error') {
+                return <pre class="nb-output-error">{out.body}</pre>;
+              }
+              return <pre class="nb-output-text">{out.body}</pre>;
+            })}
+          </div>
+        )}
+      </div>
+    )
+  )}
+</div>
+
+<style>
+  .notebook {
+    color: var(--color-text);
+  }
+
+  .nb-badges {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .nb-badge img {
+    height: 24px;
+    display: block;
+  }
+
+  /* markdown cells */
+  .nb-markdown {
+    margin: 1.5rem 0;
+    line-height: 1.7;
+    color: var(--color-text-muted);
+  }
+
+  .nb-markdown :global(h1) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 2rem 0 1rem;
+  }
+  .nb-markdown :global(h2) {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 1.75rem 0 0.75rem;
+  }
+  .nb-markdown :global(h3) {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 1.5rem 0 0.5rem;
+  }
+  .nb-markdown :global(p) {
+    margin: 0.75rem 0;
+  }
+  .nb-markdown :global(ul),
+  .nb-markdown :global(ol) {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+  }
+  .nb-markdown :global(li) {
+    margin: 0.25rem 0;
+  }
+  .nb-markdown :global(code) {
+    background: var(--color-surface);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+  }
+  .nb-markdown :global(pre) {
+    background: var(--color-surface);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  .nb-markdown :global(pre code) {
+    background: transparent;
+    padding: 0;
+  }
+  .nb-markdown :global(a) {
+    color: var(--color-teal, #2dd4bf);
+    text-decoration: underline;
+  }
+  .nb-markdown :global(table) {
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  .nb-markdown :global(th),
+  .nb-markdown :global(td) {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+  }
+  .nb-markdown :global(blockquote) {
+    border-left: 3px solid var(--color-border);
+    margin: 1rem 0;
+    padding: 0.25rem 1rem;
+    color: var(--color-text-muted);
+  }
+
+  /* code cells */
+  .nb-code {
+    margin: 1.25rem 0;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .nb-code-header {
+    background: var(--color-surface);
+    padding: 0.35rem 0.85rem;
+    border-bottom: 1px solid var(--color-border);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  .nb-code :global(pre.astro-code) {
+    margin: 0;
+    padding: 1rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    overflow-x: auto;
+  }
+
+  /* outputs */
+  .nb-outputs {
+    border-top: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 0.75rem 1rem;
+  }
+  .nb-output-text,
+  .nb-output-error {
+    margin: 0.25rem 0;
+    padding: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .nb-output-error {
+    color: #f87171;
+  }
+  .nb-output-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.5rem 0;
+    background: white;
+    border-radius: 4px;
+  }
+  .nb-output-svg :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+  .nb-output-html {
+    overflow-x: auto;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+  .nb-output-html :global(table) {
+    border-collapse: collapse;
+  }
+  .nb-output-html :global(th),
+  .nb-output-html :global(td) {
+    border: 1px solid var(--color-border);
+    padding: 0.25rem 0.5rem;
+  }
+  .nb-output-latex {
+    padding: 0.5rem 0;
+    color: var(--color-text);
+  }
+</style>

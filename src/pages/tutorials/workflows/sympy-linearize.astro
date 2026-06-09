@@ -1,0 +1,39 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import NotebookViewer from '../../../components/tutorials/NotebookViewer.astro';
+import { loadNotebook } from '../../../lib/notebook';
+
+const { cells } = loadNotebook('src/data/notebooks/2_sympy_linearize.ipynb');
+
+const colabUrl =
+  'https://colab.research.google.com/github/CogniPilot/rumoca/blob/main/examples/workflows/2_sympy_linearize/linearize_print.ipynb';
+const githubUrl =
+  'https://github.com/CogniPilot/rumoca/tree/main/examples/workflows/2_sympy_linearize';
+---
+
+<TutorialLayout
+  title="Symbolic Linearization with SymPy"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Code Generation Workflows', href: '/tutorials/workflows' },
+    { label: 'Symbolic Linearization with SymPy' },
+  ]}
+  prev={{ label: 'Parameter Identification', href: '/tutorials/workflows/jax-paramid' }}
+  next={{ label: 'Nonlinear MPC', href: '/tutorials/workflows/casadi-perch' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    The SymPy backend preserves the full algebraic structure of a Modelica model. With it you can
+    derive linearizations <em>by hand</em> &mdash; analytically &mdash; instead of finite-differencing
+    a black-box simulator. The Jacobians come out as exact rational expressions in the model's
+    physical parameters.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-6">
+    The notebook imports the rumoca-generated SymPy module, builds the symbolic right-hand side,
+    differentiates to get <code class="font-mono text-sm text-accent">A</code> and
+    <code class="font-mono text-sm text-accent">B</code> at an operating point, and inspects
+    controllability from the symbolic matrices.
+  </p>
+
+  <NotebookViewer cells={cells} colabUrl={colabUrl} githubUrl={githubUrl} />
+</TutorialLayout>

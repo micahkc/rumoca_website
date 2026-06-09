@@ -1,0 +1,38 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import NotebookViewer from '../../../components/tutorials/NotebookViewer.astro';
+import { loadNotebook } from '../../../lib/notebook';
+
+const { cells } = loadNotebook('src/data/notebooks/1_jax_paramid.ipynb');
+
+const colabUrl =
+  'https://colab.research.google.com/github/CogniPilot/rumoca/blob/main/examples/workflows/1_jax_paramid/recover_params.ipynb';
+const githubUrl =
+  'https://github.com/CogniPilot/rumoca/tree/main/examples/workflows/1_jax_paramid';
+---
+
+<TutorialLayout
+  title="Parameter Identification with JAX"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Code Generation Workflows', href: '/tutorials/workflows' },
+    { label: 'Parameter Identification with JAX' },
+  ]}
+  prev={{ label: 'Workflows', href: '/tutorials/workflows' }}
+  next={{ label: 'Symbolic Linearization', href: '/tutorials/workflows/sympy-linearize' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Rumoca compiles a Modelica model into a JAX-compatible Python module. Because the resulting
+    rollout is fully differentiable, you can fit unknown physical parameters &mdash; mass, inertia,
+    friction &mdash; directly against measured data using ordinary gradient descent. No finite
+    differences, no surrogate.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-6">
+    The notebook walks through the workflow end-to-end: emit the JAX module from a Modelica source,
+    run a differentiable ODE rollout with diffrax, and minimize a trajectory-matching loss with
+    Adam.
+  </p>
+
+  <NotebookViewer cells={cells} colabUrl={colabUrl} githubUrl={githubUrl} />
+</TutorialLayout>

@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Documentation - Rumoca"
+  description="Rumoca handbook and internals — reference docs built from the rumoca repository."
+>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="mb-12">
+      <h1 class="text-4xl font-bold text-text mb-4">Documentation</h1>
+      <p class="text-text-muted text-lg leading-relaxed max-w-3xl">
+        Reference documentation built from the <a href="https://github.com/CogniPilot/rumoca" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent">rumoca repository</a>.
+        For step-by-step lessons that run in your browser, see the <a href="/tutorials" class="text-teal hover:text-accent">Tutorials</a>.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-6">
+      <a
+        href="/user-guide/"
+        class="group p-6 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors block"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <h2 class="text-xl font-semibold text-text group-hover:text-accent transition-colors">User Guide</h2>
+        </div>
+        <p class="text-text-muted leading-relaxed">
+          Practical handbook for using rumoca — language features, CLI workflows, configuration, simulation scenarios, and code-generation backends.
+        </p>
+        <div class="mt-4 text-sm text-teal group-hover:text-accent transition-colors">
+          Open the handbook &rarr;
+        </div>
+      </a>
+
+      <a
+        href="/dev-guide/"
+        class="group p-6 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors block"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          <h2 class="text-xl font-semibold text-text group-hover:text-accent transition-colors">Developer Guide</h2>
+        </div>
+        <p class="text-text-muted leading-relaxed">
+          Compiler internals — phases, intermediate representations, the DAE pipeline, solver integration, and how to extend rumoca with new targets.
+        </p>
+        <div class="mt-4 text-sm text-teal group-hover:text-accent transition-colors">
+          Open internals &rarr;
+        </div>
+      </a>
+    </div>
+
+    <p class="mt-12 text-sm text-text-muted">
+      Built from the rumoca repository on each release. Both guides are rendered natively by this site, so they share the same theme, sidebar, and search as everything else here. To refresh locally, run <code class="font-mono text-xs bg-surface px-2 py-0.5 rounded border border-border">npm run sync-wasm</code>.
+    </p>
+  </div>
+</BaseLayout>

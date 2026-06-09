@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useEffect, useMemo, useCallback, useState } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 
@@ -15,6 +15,64 @@ interface PlotPanelProps {
   onToggleVar: (idx: number) => void;
 }
 
+// X-axis selection: -1 means "time" (result.allData[0]); 0..N-1 maps to result.names[i].
+const X_TIME = -1;
+
+// Custom path builder for phase portraits: uPlot's default line renderer assumes X is
+// sorted ascending and drops/misrenders points otherwise. This builder connects samples
+// in their array (temporal) order regardless of X ordering.
+const temporalLinearPath: uPlot.Series.PathBuilder = (u, seriesIdx) => {
+  const stroke = new Path2D();
+  const series = u.series[seriesIdx];
+  const yScale = series.scale || 'y';
+  const xData = u.data[0] as readonly (number | null)[];
+  const yData = u.data[seriesIdx] as readonly (number | null)[];
+
+  // Iterate the full data array in temporal order rather than uPlot's pre-computed
+  // idx0..idx1, which is derived from a sorted-X binary search and may exclude points
+  // when X is non-monotonic (e.g. limit-cycle phase portraits).
+  let started = false;
+  for (let i = 0; i < xData.length; i++) {
+    const xv = xData[i];
+    const yv = yData[i];
+    if (xv == null || yv == null || !Number.isFinite(xv as number) || !Number.isFinite(yv as number)) {
+      started = false;
+      continue;
+    }
+    const x = u.valToPos(xv as number, 'x', true);
+    const y = u.valToPos(yv as number, yScale, true);
+    if (!started) {
+      stroke.moveTo(x, y);
+      started = true;
+    } else {
+      stroke.lineTo(x, y);
+    }
+  }
+
+  return { stroke };
+};
+
+// Range builder that scans all X values rather than assuming sorted ascending.
+const unsortedXRange: uPlot.Scale.Range = (u) => {
+  const data = u.data[0] as readonly (number | null)[];
+  let min = Infinity;
+  let max = -Infinity;
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i];
+    if (v != null && Number.isFinite(v)) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+  }
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
+  if (min === max) {
+    const pad = Math.abs(min) * 0.05 || 1;
+    return [min - pad, max + pad];
+  }
+  const pad = (max - min) * 0.05;
+  return [min - pad, max + pad];
+};
+
 const COLORS = [
   '#f0732e',
   '#15b7e7',
@@ -30,30 +88,51 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
   const containerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<uPlot | null>(null);
 
-  // Build sorted array of selected variable indices for stable ordering
-  const selectedArr = useMemo(() => Array.from(selectedVars).sort((a, b) => a - b), [selectedVars]);
+  const [xVarIdx, setXVarIdx] = useState<number>(X_TIME);
 
-  // Build uPlot data: [times, ...selectedSeriesData]
+  // Reset X selection back to time when a new simulation result arrives.
+  useEffect(() => {
+    setXVarIdx(X_TIME);
+  }, [result]);
+
+  // Build sorted array of selected variable indices for stable ordering;
+  // exclude the variable currently used on X to avoid plotting it against itself.
+  const selectedArr = useMemo(
+    () => Array.from(selectedVars).filter((i) => i !== xVarIdx).sort((a, b) => a - b),
+    [selectedVars, xVarIdx],
+  );
+
+  const xData = xVarIdx === X_TIME ? result.allData[0] : result.allData[xVarIdx + 1];
+  const xLabel = xVarIdx === X_TIME ? 'time (s)' : result.names[xVarIdx];
+
+  // Build uPlot data: [xData, ...selectedSeriesData]
   const plotData = useMemo(() => {
-    const data: uPlot.AlignedData = [result.allData[0]];
+    const data: uPlot.AlignedData = [xData];
     for (const vi of selectedArr) {
       data.push(result.allData[vi + 1]);
     }
     return data;
-  }, [result, selectedArr]);
+  }, [result, selectedArr, xData]);
+
+  const phasePortrait = xVarIdx !== X_TIME;
 
   // Build uPlot options
   const buildOpts = useCallback(
     (width: number): uPlot.Options => {
       const series: uPlot.Series[] = [
-        { label: 'time (s)' },
+        { label: xLabel },
       ];
       selectedArr.forEach((vi, i) => {
-        series.push({
+        const s: uPlot.Series = {
           label: result.names[vi],
           stroke: COLORS[i % COLORS.length],
           width: 2,
-        });
+        };
+        if (phasePortrait) {
+          // Bypass uPlot's sorted-X assumption; draw lines in temporal order.
+          s.paths = temporalLinearPath;
+        }
+        series.push(s);
       });
 
       return {
@@ -62,10 +141,16 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
         cursor: {
           drag: { x: true, y: true },
         },
+        scales: {
+          // X data is numeric (seconds or a state variable), not a unix timestamp.
+          x: phasePortrait
+            ? { time: false, range: unsortedXRange }
+            : { time: false },
+        },
         series,
         axes: [
           {
-            label: 'time (s)',
+            label: xLabel,
             stroke: '#5a7a8a',
             grid: { stroke: '#d0d8e0', width: 0.5 },
             ticks: { stroke: '#d0d8e0', width: 0.5 },
@@ -93,7 +178,7 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
         },
       };
     },
-    [selectedArr, result.names],
+    [selectedArr, result.names, xLabel, phasePortrait],
   );
 
   // Create / rebuild uPlot when selectedVars or result changes
@@ -143,16 +228,15 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
     const plot = plotRef.current;
     if (!plot) return;
 
-    if (playbackIndex !== null && playbackIndex < result.allData[0].length) {
-      const time = result.allData[0][playbackIndex];
-      // Convert time value to pixel position via the x scale
-      const left = plot.valToPos(time, 'x');
+    if (playbackIndex !== null && playbackIndex < xData.length) {
+      const xVal = xData[playbackIndex];
+      const left = plot.valToPos(xVal, 'x');
       plot.setCursor({ left, top: -1 });
     } else {
       // Clear cursor
       plot.setCursor({ left: -1, top: -1 });
     }
-  }, [playbackIndex, result]);
+  }, [playbackIndex, xData]);
 
   return (
     <>
@@ -161,12 +245,33 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
         style={{ height: '300px', width: '100%' }}
       />
 
-      {/* Variable toggle buttons */}
+      {/* X-axis selector */}
+      <div
+        className="px-4 py-2 flex items-center gap-2 border-t text-xs"
+        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+      >
+        <label htmlFor="plot-x-axis" className="font-mono">X axis:</label>
+        <select
+          id="plot-x-axis"
+          value={xVarIdx}
+          onChange={(e) => setXVarIdx(Number(e.target.value))}
+          className="px-2 py-1 rounded-md text-xs font-mono border bg-transparent"
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+        >
+          <option value={X_TIME}>time (s)</option>
+          {result.names.map((name, i) => (
+            <option key={i} value={i}>{name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Y-axis variable toggle buttons (X variable is excluded) */}
       <div
         className="px-4 py-3 flex flex-wrap gap-2 border-t"
         style={{ borderColor: 'var(--color-border)' }}
       >
         {result.names.map((name, i) => {
+          if (i === xVarIdx) return null;
           const selIdx = selectedArr.indexOf(i);
           const isSelected = selIdx !== -1;
           const color = isSelected ? COLORS[selIdx % COLORS.length] : undefined;
@@ -175,13 +280,29 @@ export default function PlotPanel({ result, selectedVars, playbackIndex, onToggl
             <button
               key={i}
               onClick={() => onToggleVar(i)}
-              className="px-2.5 py-1 rounded-md text-xs font-mono border transition-colors"
+              className="px-2.5 py-1 rounded-md text-xs font-mono border transition-colors inline-flex items-center gap-1.5"
               style={{
                 borderColor: isSelected ? color : 'var(--color-border)',
                 backgroundColor: isSelected ? color + '15' : 'transparent',
                 color: isSelected ? color : 'var(--color-text-muted)',
               }}
             >
+              <span
+                aria-hidden="true"
+                className="inline-flex items-center justify-center"
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '2px',
+                  border: `1px solid ${isSelected ? color : 'var(--color-border)'}`,
+                  backgroundColor: isSelected ? color : 'transparent',
+                  color: '#fff',
+                  fontSize: '10px',
+                  lineHeight: 1,
+                }}
+              >
+                {isSelected ? '✓' : ''}
+              </span>
               {name}
             </button>
           );

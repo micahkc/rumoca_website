@@ -76,17 +76,48 @@ jobs:
           tar -xzf /tmp/rumoca-extract/rumoca-web-*.tar.gz -C /tmp/rumoca-extract
           echo "RUMOCA_DIR=/tmp/rumoca-extract" >> "$GITHUB_ENV"
 
-      - name: Copy mdBook docs into public/
+      - name: Copy playground assets into public/playground/
         if: steps.rumoca.outputs.tag != ''
         run: |
+          src="$RUMOCA_DIR/editors/wasm"
+          dst="public/playground/app"
+          if [ -d "$src" ]; then
+            rm -rf "$dst"
+            mkdir -p "$dst"
+            ( cd "$src" && find . -type f \
+                ! -path './node_modules/*' \
+                ! -path './tests/*' \
+                ! -name 'package-lock.json' \
+                ! -name 'package.json' \
+                -print0 | tar --null -cf - --files-from - ) | \
+              ( cd "$dst" && tar -xf - )
+            if [ -f "$dst/index.html" ]; then
+              sed -i \
+                -e "s|window.rumocaWasmPkgBase = '../../pkg';|window.rumocaWasmPkgBase = '';|" \
+                -e "s|window.rumocaWasmPkgSubdir = 'release-full-web';|window.rumocaWasmPkgSubdir = 'wasm';|" \
+                "$dst/index.html"
+            fi
+            echo "  ✓ playground (WASM paths rewritten to /wasm/)"
+          else
+            echo "::warning::Tarball missing editors/wasm/ — /playground will be empty"
+          fi
+
+      - name: Copy docs markdown into src/content/
+        if: steps.rumoca.outputs.tag != ''
+        run: |
+          # Astro renders these natively at build time via the content
+          # collections defined in src/content.config.ts.
           for guide in user-guide dev-guide; do
-            src="$RUMOCA_DIR/$guide"
+            src="$RUMOCA_DIR/docs/$guide/src"
+            dst="src/content/$guide"
             if [ -d "$src" ]; then
-              rm -rf "public/$guide"
-              cp -r "$src" "public/$guide"
-              echo "  ✓ $guide → public/$guide"
+              rm -rf "$dst"
+              mkdir -p "$dst"
+              ( cd "$src" && find . -name '*.md' -print0 | tar --null -cf - --files-from - ) | \
+                ( cd "$dst" && tar -xf - )
+              echo "  ✓ $guide markdown → $dst"
             else
-              echo "::warning::Tarball missing $guide/ — /$guide will 404"
+              echo "::warning::Tarball missing docs/$guide/src — /$guide will be empty"
             fi
           done
 

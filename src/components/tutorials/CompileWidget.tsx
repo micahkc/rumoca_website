@@ -28,7 +28,7 @@ export default function CompileWidget({ initialSource, modelName, defaultBackend
     client.ready.then(async () => {
       setReady(true);
       try {
-        const tplJson = await client.getBuiltinTemplates();
+        const tplJson = await client.getBuiltinTargets();
         const tpls: string[] = JSON.parse(tplJson);
         setBackends([JSON_BACKEND, ...tpls.map((t) => ({ name: t, label: t }))]);
       } catch { /* ignore */ }
@@ -49,7 +49,7 @@ export default function CompileWidget({ initialSource, modelName, defaultBackend
           setOutput(daeJson);
         }
       } else {
-        const rendered = await client.renderTemplate(daeJson, selectedBackend);
+        const rendered = await client.renderTarget(daeJson, modelName, selectedBackend);
         setOutput(rendered);
       }
     } catch (e: any) {

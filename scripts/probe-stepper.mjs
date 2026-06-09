@@ -20,8 +20,9 @@ function loadModelFromTs(filename) {
 }
 
 const sources = {
-  QuadrotorAcro: { src: loadModelFromTs('quadrotor-acro-model.ts'), name: 'QuadrotorAcro', solver: 'rk-like' },
-  Rover:         { src: loadModelFromTs('rover-model.ts'),          name: 'Rover',         solver: undefined },
+  QuadrotorAcro: { src: loadModelFromTs('quadrotor-acro-model.ts'),     name: 'QuadrotorAcro', solver: 'rk-like' },
+  FixedWing:     { src: loadModelFromTs('fixedwing-controller-model.ts'), name: 'FixedWing',     solver: 'rk-like' },
+  Rover:         { src: loadModelFromTs('rover-model.ts'),              name: 'Rover',         solver: undefined },
 };
 const target = sources[which];
 if (!target) throw new Error(`Unknown model: ${which}`);
@@ -54,6 +55,29 @@ try {
     console.log(`✓ One step ok, t=${stepper.time()}`);
   } catch (e) {
     console.error('✗ step() failed:', e?.message ?? e);
+  }
+  // Stress-test reset path. The old impl rebuilt the stepper (~7s); the
+  // in-place reset should be milliseconds.
+  try {
+    const tResetA = performance.now();
+    stepper.reset();
+    const dtReset = performance.now() - tResetA;
+    console.log(`✓ reset() in ${dtReset.toFixed(1)} ms, t=${stepper.time()}`);
+  } catch (e) {
+    console.error('✗ reset() failed:', e?.message ?? e);
+  }
+  if (target.name === 'QuadrotorAcro') {
+    // Simulate one second of "armed + full throttle" and check it climbs.
+    stepper.set_input('armed', 1);
+    stepper.set_input('stick_throttle', 1.0);
+    const z0 = stepper.get('position[3]');
+    for (let i = 0; i < 1000; i++) stepper.step(0.001);
+    const z1 = stepper.get('position[3]');
+    const omega = stepper.get('omega_m[1]');
+    console.log(`After 1.0s @ armed=1, throttle=1.0:`);
+    console.log(`  position[3]: ${z0.toFixed(3)} → ${z1.toFixed(3)} m  (Δ = ${(z1 - z0).toFixed(3)})`);
+    console.log(`  omega_m[1]:  ${omega.toFixed(1)} rad/s`);
+    console.log(z1 > z0 + 0.5 ? '  ✓ DRONE CLIMBED' : '  ✗ drone did not climb significantly');
   }
   if (process.argv.includes('--probe-names')) {
     const candidates = [

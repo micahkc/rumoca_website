@@ -80,7 +80,7 @@ export default function PythonWorkflow({
     try {
       const client = getRumocaClient();
       const daeJson = await client.compile(source, modelName);
-      const rendered = await client.renderTemplate(daeJson, backend);
+      const rendered = await client.renderTarget(daeJson, modelName, backend);
       setGeneratedCode(rendered);
     } catch (e: any) {
       setError(e.message || String(e));

@@ -1,0 +1,36 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import NotebookViewer from '../../../components/tutorials/NotebookViewer.astro';
+import { loadNotebook } from '../../../lib/notebook';
+
+const { cells } = loadNotebook('src/data/notebooks/3_casadi_perch.ipynb');
+
+const colabUrl =
+  'https://colab.research.google.com/github/CogniPilot/rumoca/blob/main/examples/workflows/3_casadi_perch/perch_nmpc.ipynb';
+const githubUrl =
+  'https://github.com/CogniPilot/rumoca/tree/main/examples/workflows/3_casadi_perch';
+---
+
+<TutorialLayout
+  title="Nonlinear MPC with CasADi"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Code Generation Workflows', href: '/tutorials/workflows' },
+    { label: 'Nonlinear MPC with CasADi' },
+  ]}
+  prev={{ label: 'Symbolic Linearization', href: '/tutorials/workflows/sympy-linearize' }}
+  next={{ label: 'On-Manifold EKF', href: '/tutorials/workflows/symforce-ekf' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    Rumoca emits the Modelica dynamics as a CasADi expression graph. From there it is one short
+    step to a nonlinear MPC: write the cost and constraints, hand the whole problem to IPOPT,
+    and let CasADi's algorithmic differentiation supply the Jacobians and Hessians the solver needs.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-6">
+    The example flies a fixed-wing aircraft through an aggressive perched-landing maneuver &mdash;
+    a flight regime where linear controllers based on a hover trim simply do not apply.
+  </p>
+
+  <NotebookViewer cells={cells} colabUrl={colabUrl} githubUrl={githubUrl} />
+</TutorialLayout>

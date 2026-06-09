@@ -1,0 +1,36 @@
+---
+import TutorialLayout from '../../../layouts/TutorialLayout.astro';
+import NotebookViewer from '../../../components/tutorials/NotebookViewer.astro';
+import { loadNotebook } from '../../../lib/notebook';
+
+const { cells } = loadNotebook('src/data/notebooks/4_symforce_ekf.ipynb');
+
+const colabUrl =
+  'https://colab.research.google.com/github/CogniPilot/rumoca/blob/main/examples/workflows/4_symforce_ekf/ekf_tutorial.ipynb';
+const githubUrl =
+  'https://github.com/CogniPilot/rumoca/tree/main/examples/workflows/4_symforce_ekf';
+---
+
+<TutorialLayout
+  title="On-Manifold EKF with SymForce"
+  breadcrumbs={[
+    { label: 'Tutorials', href: '/tutorials' },
+    { label: 'Code Generation Workflows', href: '/tutorials/workflows' },
+    { label: 'On-Manifold EKF with SymForce' },
+  ]}
+  prev={{ label: 'Nonlinear MPC', href: '/tutorials/workflows/casadi-perch' }}
+>
+  <p class="text-text-muted leading-relaxed mb-4">
+    SymForce works with rotations as elements of <em>SO(3)</em> rather than as triples of Euler
+    angles, which is exactly what an attitude estimator wants. Rumoca emits the process model in
+    a form SymForce can lift into its Lie-group framework, and SymForce in turn produces analytical
+    Jacobians and optimized C++ for the prediction and update steps.
+  </p>
+
+  <p class="text-text-muted leading-relaxed mb-6">
+    The notebook walks through an inertial-navigation EKF: an IMU drives prediction, intermittent
+    GPS fixes correct it, and the orientation update respects the manifold structure throughout.
+  </p>
+
+  <NotebookViewer cells={cells} colabUrl={colabUrl} githubUrl={githubUrl} />
+</TutorialLayout>

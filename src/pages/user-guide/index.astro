@@ -1,0 +1,32 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { loadDocsSidebar } from '../../lib/docs-sidebar';
+
+const sidebar = loadDocsSidebar('user-guide');
+---
+
+<DocsLayout collection="user-guide" title="User Guide">
+  <h1>User Guide</h1>
+  <p class="lead">
+    Practical handbook for rumoca — language features, CLI workflows, configuration, simulation scenarios, and code-generation backends.
+  </p>
+
+  {sidebar.prefix.length > 0 && (
+    <ul>
+      {sidebar.prefix.map((item) => (
+        <li><a href={`/user-guide/${item.slug}`}>{item.title}</a></li>
+      ))}
+    </ul>
+  )}
+
+  {sidebar.sections.map((section) => (
+    <>
+      <h2>{section.heading}</h2>
+      <ul>
+        {section.items.map((item) => (
+          <li><a href={`/user-guide/${item.slug}`}>{item.title}</a></li>
+        ))}
+      </ul>
+    </>
+  ))}
+</DocsLayout>

@@ -1,0 +1,118 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import {
+  loadDocsSidebar,
+  getPrevNext,
+  type DocsCollection,
+} from '../lib/docs-sidebar';
+
+interface Props {
+  collection: DocsCollection;
+  title: string;
+  currentSlug?: string;
+}
+
+const { collection, title, currentSlug } = Astro.props;
+const collectionLabel = collection === 'user-guide' ? 'User Guide' : 'Developer Guide';
+const sidebar = loadDocsSidebar(collection);
+const { prev, next } = currentSlug ? getPrevNext(sidebar, currentSlug) : {};
+
+const docsHref = (slug: string) => `/${collection}/${slug}`;
+const isCurrent = (slug: string) => currentSlug === slug;
+---
+
+<BaseLayout title={`${title} - ${collectionLabel} - Rumoca`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <nav class="mb-8 text-sm text-text-muted">
+      <a href="/docs" class="text-teal hover:text-accent transition-colors">Docs</a>
+      <span class="mx-2">/</span>
+      <a href={`/${collection}`} class="text-teal hover:text-accent transition-colors">{collectionLabel}</a>
+      {currentSlug && (
+        <>
+          <span class="mx-2">/</span>
+          <span class="text-text font-medium">{title}</span>
+        </>
+      )}
+    </nav>
+
+    <div class="flex gap-12">
+      <nav class="hidden lg:block w-64 shrink-0">
+        <div class="sticky top-24 space-y-6 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+          <a
+            href={`/${collection}`}
+            class:list={[
+              'block text-xs font-semibold uppercase tracking-wider transition-colors',
+              !currentSlug
+                ? 'text-accent'
+                : 'text-text-muted hover:text-accent',
+            ]}
+          >
+            {collectionLabel}
+          </a>
+
+          {sidebar.prefix.length > 0 && (
+            <div class="space-y-0.5">
+              {sidebar.prefix.map((item) => (
+                <a
+                  href={docsHref(item.slug)}
+                  class:list={[
+                    'block px-3 py-1.5 rounded-lg text-sm transition-colors',
+                    isCurrent(item.slug)
+                      ? 'text-accent bg-accent/10 font-medium'
+                      : 'text-text-muted hover:text-text hover:bg-surface',
+                  ]}
+                >
+                  {item.title}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {sidebar.sections.map((section) => (
+            <div>
+              <div class="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 px-3">
+                {section.heading}
+              </div>
+              <div class="space-y-0.5">
+                {section.items.map((item) => (
+                  <a
+                    href={docsHref(item.slug)}
+                    class:list={[
+                      'block px-3 py-1.5 rounded-lg text-sm transition-colors',
+                      isCurrent(item.slug)
+                        ? 'text-accent bg-accent/10 font-medium'
+                        : 'text-text-muted hover:text-text hover:bg-surface',
+                    ]}
+                  >
+                    {item.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <div class="flex-1 min-w-0 max-w-3xl">
+        <article class="docs-prose">
+          <slot />
+        </article>
+
+        {(prev || next) && (
+          <div class="mt-16 pt-8 border-t border-border flex items-center justify-between gap-4">
+            {prev ? (
+              <a href={docsHref(prev.slug)} class="text-sm text-teal hover:text-accent transition-colors">
+                &larr; {prev.title}
+              </a>
+            ) : <div />}
+            {next ? (
+              <a href={docsHref(next.slug)} class="text-sm text-teal hover:text-accent transition-colors text-right">
+                {next.title} &rarr;
+              </a>
+            ) : <div />}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,32 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { loadDocsSidebar } from '../../lib/docs-sidebar';
+
+const sidebar = loadDocsSidebar('dev-guide');
+---
+
+<DocsLayout collection="dev-guide" title="Developer Guide">
+  <h1>Developer Guide</h1>
+  <p class="lead">
+    Compiler internals — phases, intermediate representations, the DAE pipeline, solver integration, and how to extend rumoca with new targets.
+  </p>
+
+  {sidebar.prefix.length > 0 && (
+    <ul>
+      {sidebar.prefix.map((item) => (
+        <li><a href={`/dev-guide/${item.slug}`}>{item.title}</a></li>
+      ))}
+    </ul>
+  )}
+
+  {sidebar.sections.map((section) => (
+    <>
+      <h2>{section.heading}</h2>
+      <ul>
+        {section.items.map((item) => (
+          <li><a href={`/dev-guide/${item.slug}`}>{item.title}</a></li>
+        ))}
+      </ul>
+    </>
+  ))}
+</DocsLayout>

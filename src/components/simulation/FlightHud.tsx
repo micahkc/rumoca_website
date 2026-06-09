@@ -43,7 +43,16 @@ function readVehicleState(
 ): VehicleReading | null {
   if (aircraftType === 'quadrotor') {
     const { q0, q1, q2, q3 } = readQuat(source, ['quat[1]', 'quat[2]', 'quat[3]', 'quat[4]']);
-    const { roll, pitch } = quatToRollPitch(q0, q1, q2, q3);
+    // drone.glb's visual nose is body +Y, so the chase view looks down +Y, not
+    // the body +X that quatToRollPitch assumes. Rotate the attitude into a
+    // +X-forward frame (q ⊗ q_z90) so the horizon's roll/pitch match the view
+    // (otherwise they read swapped). See reference_drone_glb_nose memory.
+    const c = Math.SQRT1_2;
+    const v0 = c * (q0 - q3);
+    const v1 = c * (q1 + q2);
+    const v2 = c * (q2 - q1);
+    const v3 = c * (q0 + q3);
+    const { roll, pitch } = quatToRollPitch(v0, v1, v2, v3);
     const pz = source.get('position[3]') ?? 0;
     const vx = source.get('velocity[1]') ?? 0;
     const vy = source.get('velocity[2]') ?? 0;
@@ -51,14 +60,17 @@ function readVehicleState(
     return { roll, pitch, altitude: pz, speed: Math.hypot(vx, vy, vz) };
   }
   if (aircraftType === 'fixedwing') {
-    const { q0, q1, q2, q3 } = readQuat(source, ['q0', 'q1', 'q2', 'q3']);
+    const { q0, q1, q2, q3 } = readQuat(source, ['quat[1]', 'quat[2]', 'quat[3]', 'quat[4]']);
     const { roll, pitch } = quatToRollPitch(q0, q1, q2, q3);
-    // Fixed-wing model: pz is NED, altitude = -pz.
-    const pz = source.get('pz') ?? 0;
-    const vx = source.get('vx') ?? 0;
-    const vy = source.get('vy') ?? 0;
-    const vz = source.get('vz') ?? 0;
-    return { roll, pitch, altitude: -pz, speed: Math.hypot(vx, vy, vz) };
+    // Fixed-wing model: world frame is Z-up, altitude = position[3].
+    const pz = source.get('position[3]') ?? 0;
+    const speed = source.get('airspeed')
+      ?? Math.hypot(
+        source.get('velocity[1]') ?? 0,
+        source.get('velocity[2]') ?? 0,
+        source.get('velocity[3]') ?? 0,
+      );
+    return { roll, pitch, altitude: pz, speed };
   }
   return null; // rover has no attitude
 }

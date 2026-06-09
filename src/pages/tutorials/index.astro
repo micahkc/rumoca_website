@@ -79,71 +79,23 @@ const cardDescClass = "text-sm text-text-muted mt-1";
         <span class="text-xs font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">3</span>
         <a href="/tutorials/workflows" class="text-2xl font-semibold text-text hover:text-accent transition-colors">Code Generation Workflows</a>
       </div>
-      <p class="text-text-muted mb-6">Modelica in, any language out &mdash; CasADi for optimization, SymPy for analysis, FMU for co-simulation.</p>
+      <p class="text-text-muted mb-6">Take a Modelica model into a downstream Python ecosystem &mdash; gradient-based fitting, symbolic analysis, optimization, or on-manifold estimation &mdash; via the code Rumoca generates. Each tutorial embeds a Jupyter notebook you can open in Google Colab.</p>
       <div class="grid sm:grid-cols-2 gap-4">
-        <a href="/tutorials/workflows/casadi" class={cardClass}>
-          <h3 class={cardTitleClass}>Simulation with CasADi</h3>
-          <p class={cardDescClass}>Compile to CasADi and simulate with Python.</p>
+        <a href="/tutorials/workflows/jax-paramid" class={cardClass}>
+          <h3 class={cardTitleClass}>Parameter Identification with JAX</h3>
+          <p class={cardDescClass}>Fit physical parameters by gradient descent through a differentiable rollout.</p>
         </a>
-        <a href="/tutorials/workflows/sympy-bode" class={cardClass}>
-          <h3 class={cardTitleClass}>SymPy &amp; Bode Plots</h3>
-          <p class={cardDescClass}>Symbolic analysis and frequency-domain plots.</p>
+        <a href="/tutorials/workflows/sympy-linearize" class={cardClass}>
+          <h3 class={cardTitleClass}>Symbolic Linearization with SymPy</h3>
+          <p class={cardDescClass}>Differentiate the model algebraically to closed-form <code class="font-mono text-xs">A</code>, <code class="font-mono text-xs">B</code>.</p>
         </a>
-        <a href="/tutorials/workflows/custom-templates" class={cardClass}>
-          <h3 class={cardTitleClass}>Custom Jinja Templates</h3>
-          <p class={cardDescClass}>Generate MATLAB, Fortran, C, or any format.</p>
+        <a href="/tutorials/workflows/casadi-perch" class={cardClass}>
+          <h3 class={cardTitleClass}>Nonlinear MPC with CasADi</h3>
+          <p class={cardDescClass}>Direct-transcription MPC solved with IPOPT, flown through an aggressive fixed-wing maneuver.</p>
         </a>
-        <a href="/tutorials/workflows/fmu-export" class={cardClass}>
-          <h3 class={cardTitleClass}>FMU Export for MATLAB</h3>
-          <p class={cardDescClass}>Export FMUs and import into Simulink.</p>
-        </a>
-      </div>
-    </section>
-
-    <section>
-      <div class="flex items-center gap-3 mb-2">
-        <span class="text-xs font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">4</span>
-        <a href="/tutorials/controls" class="text-2xl font-semibold text-text hover:text-accent transition-colors">Control Systems</a>
-      </div>
-      <p class="text-text-muted mb-6">Close the loop &mdash; from a DC motor to a flying quadrotor.</p>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <a href="/tutorials/controls/dc-motor-pid" class={cardClass}>
-          <h3 class={cardTitleClass}>PID DC Motor</h3>
-          <p class={cardDescClass}>Closed-loop PID control end to end.</p>
-        </a>
-        <a href="/tutorials/controls/pendulum-on-cart" class={cardClass}>
-          <h3 class={cardTitleClass}>Pendulum on Cart</h3>
-          <p class={cardDescClass}>Coupled DAE system with constraint forces.</p>
-        </a>
-        <a href="/tutorials/controls/quadrotor" class={cardClass}>
-          <h3 class={cardTitleClass}>Quadrotor Autopilot</h3>
-          <p class={cardDescClass}>6-DOF quaternion dynamics with cascaded control.</p>
-        </a>
-      </div>
-    </section>
-
-    <section>
-      <div class="flex items-center gap-3 mb-2">
-        <span class="text-xs font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">5</span>
-        <a href="/tutorials/optimization" class="text-2xl font-semibold text-text hover:text-accent transition-colors">Optimization &amp; MPC</a>
-      </div>
-      <p class="text-text-muted mb-6">The real power &mdash; Modelica dynamics go straight into CasADi for trajectory optimization and MPC.</p>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <a href="/tutorials/optimization/optimal-control" class={cardClass}>
-          <h3 class={cardTitleClass}>Optimal Control Intro</h3>
-          <p class={cardDescClass}>Your first trajectory optimization with CasADi.</p>
-        </a>
-        <a href="/tutorials/optimization/pendulum-swingup" class={cardClass}>
-          <h3 class={cardTitleClass}>Pendulum Swing-Up</h3>
-          <p class={cardDescClass}>Full swing-up trajectory via direct transcription.</p>
-        </a>
-        <a href="/tutorials/optimization/mpc-quadrotor" class={cardClass}>
-          <h3 class={cardTitleClass}>MPC: Quadrotor</h3>
-          <p class={cardDescClass}>Receding-horizon MPC for quadrotor hover.</p>
-        </a>
-        <a href="/tutorials/optimization/mpc-fixed-wing" class={cardClass}>
-          <h3 class={cardTitleClass}>MPC: Fixed-Wing Aircraft</h3>
-          <p class={cardDescClass}>MPC path following for a SportCub airplane.</p>
+        <a href="/tutorials/workflows/symforce-ekf" class={cardClass}>
+          <h3 class={cardTitleClass}>On-Manifold EKF with SymForce</h3>
+          <p class={cardDescClass}>IMU + GPS attitude estimator built on <em>SO(3)</em> rather than Euler angles.</p>
         </a>
       </div>
     </section>

@@ -1,8 +1,25 @@
 ---
+// Embeds rumoca's editors/wasm playground (Monaco editor + diagnostics +
+// command palette + WASM compile). The page itself is just an iframe;
+// scripts/sync-wasm.sh mirrors editors/wasm/ into public/playground/ on
+// every sync, and the deploy workflow does the same in CI — so this page
+// auto-updates with each rumoca release.
+//
+// The previous textarea-based PlaygroundApp.tsx is kept under
+// src/components/playground/ for now in case we want to fall back, but it
+// is no longer wired in.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import PlaygroundApp from '../components/playground/PlaygroundApp';
 ---
 
-<BaseLayout title="Playground - Rumoca" description="Try the Rumoca Modelica compiler in your browser. No installation required." fullScreen={true}>
-  <PlaygroundApp client:only="react" />
+<BaseLayout
+  title="Playground - Rumoca"
+  description="Write Modelica in a Monaco editor with live diagnostics and compile in your browser via WebAssembly."
+  fullScreen={true}
+>
+  <iframe
+    src="/playground/app/index.html"
+    title="Rumoca Modelica Playground"
+    allow="cross-origin-isolated"
+    style="width: 100%; height: 100%; border: 0; display: block;"
+  ></iframe>
 </BaseLayout>

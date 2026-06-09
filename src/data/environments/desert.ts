@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { addLandingPad } from './cognipilot-logo';
+import { addLandingPad, clearOfRunway } from './cognipilot-logo';
 
 // Ported from rumoca's examples/interactive/quadrotor/quadrotor_scene.js so
 // the simulation page matches the look of the rumoca interactive demo.
@@ -45,6 +45,7 @@ function createCloudTexture(): THREE.CanvasTexture {
 export function setupDesertEnvironment(
   scene: THREE.Scene,
   renderer?: THREE.WebGLRenderer | null,
+  aircraft?: string,
 ): void {
   // ── Desert skybox (arid2 cubemap) ─────────────────────────────────
   const skybox = new THREE.CubeTextureLoader().load([
@@ -222,7 +223,8 @@ export function setupDesertEnvironment(
       new THREE.DodecahedronGeometry(s, 1),
       tint > 0.45 ? rockMat : rockDarkMat,
     );
-    rock.position.set(Math.cos(angle) * radius, s * 0.3, Math.sin(angle) * radius);
+    const [rx, rz] = clearOfRunway(Math.cos(angle) * radius, Math.sin(angle) * radius, aircraft, s);
+    rock.position.set(rx, s * 0.3, rz);
     rock.scale.set(1.0 + tint * 0.7, squash, 0.8 + tint * 0.6);
     rock.rotation.set(0.08 + tint * 0.18, yaw, 0.04 + tint * 0.12);
     scene.add(rock);
@@ -240,7 +242,8 @@ export function setupDesertEnvironment(
     const armScale = 0.55 + deterministicUnit(i * 7 + 107) * 0.6;
 
     const cactus = new THREE.Group();
-    cactus.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+    const [cx, cz] = clearOfRunway(Math.cos(angle) * radius, Math.sin(angle) * radius, aircraft, 0.5);
+    cactus.position.set(cx, 0, cz);
     cactus.rotation.y = yaw;
 
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.13, h, 8), cactusMat);
@@ -275,14 +278,15 @@ export function setupDesertEnvironment(
   }
 
   // ── Cognipilot landing pad ────────────────────────────────────────
-  addLandingPad(scene);
+  addLandingPad(scene, aircraft);
 
   // ── Kangaroo (Poly by Google, CC-BY 3.0) — kept from prior desert ─
   {
     const loader = new GLTFLoader();
     loader.load('/models/kangaroo.glb', (gltf) => {
       const roo = gltf.scene;
-      roo.position.set(7, 0.69, -5);
+      const [rx, rz] = clearOfRunway(7, -5, aircraft, 2);
+      roo.position.set(rx, 0.69, rz);
       roo.rotation.y = -0.8;
       roo.scale.set(0.01, 0.01, 0.01);
       scene.add(roo);

@@ -4,6 +4,7 @@ import TutorialLayout from '../../../layouts/TutorialLayout.astro';
 const cardClass = "group p-5 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors";
 const cardTitleClass = "font-semibold text-text group-hover:text-accent transition-colors";
 const cardDescClass = "text-sm text-text-muted mt-1";
+const cardMetaClass = "text-xs font-mono text-accent mt-2";
 ---
 
 <TutorialLayout
@@ -12,37 +13,52 @@ const cardDescClass = "text-sm text-text-muted mt-1";
     { label: 'Tutorials', href: '/tutorials' },
     { label: 'Code Generation Workflows' },
   ]}
-  next={{ label: 'Simulation with CasADi', href: '/tutorials/workflows/casadi' }}
+  next={{ label: 'Parameter Identification with JAX', href: '/tutorials/workflows/jax-paramid' }}
 >
   <p class="text-text-muted text-lg mb-6 leading-relaxed">
-    The real power of Rumoca lies in its ability to integrate with a variety of existing tools.
-    Write your model once in Modelica and generate production-ready code for whichever ecosystem
-    you need &mdash; CasADi for optimization and optimal control, SymPy for symbolic analysis and
-    transfer functions, FMUs for co-simulation with MATLAB/Simulink, or any custom format through
-    Jinja templates.
+    A Modelica model is a description of the physics. These tutorials show what happens after
+    Rumoca turns that description into code: how the same model becomes a JAX module you can
+    differentiate through, a SymPy expression you can analyze by hand, a CasADi graph you can hand
+    to a nonlinear solver, or a SymForce program you can run on an embedded estimator.
   </p>
   <p class="text-text-muted text-lg mb-12 leading-relaxed">
-    Each tutorial produces a downloadable Python notebook or export artifact that you can run
-    outside the browser. This is the bridge between prototyping in the Rumoca playground and
-    deploying models in real engineering workflows.
+    Each tutorial embeds a full Jupyter notebook with rendered outputs, and the
+    <strong>Open in Colab</strong> badge launches the notebook for live execution &mdash; no local
+    Python install required.
   </p>
 
   <div class="grid sm:grid-cols-2 gap-4">
-    <a href="/tutorials/workflows/casadi" class={cardClass}>
-      <h3 class={cardTitleClass}>Simulation with CasADi</h3>
-      <p class={cardDescClass}>Compile to CasADi and simulate with Python.</p>
+    <a href="/tutorials/workflows/jax-paramid" class={cardClass}>
+      <h3 class={cardTitleClass}>Parameter Identification with JAX</h3>
+      <p class={cardDescClass}>
+        Fit unknown physical parameters by gradient descent through a differentiable rollout.
+      </p>
+      <p class={cardMetaClass}>JAX + diffrax</p>
     </a>
-    <a href="/tutorials/workflows/sympy-bode" class={cardClass}>
-      <h3 class={cardTitleClass}>SymPy &amp; Bode Plots</h3>
-      <p class={cardDescClass}>Symbolic analysis and frequency-domain plots.</p>
+    <a href="/tutorials/workflows/sympy-linearize" class={cardClass}>
+      <h3 class={cardTitleClass}>Symbolic Linearization with SymPy</h3>
+      <p class={cardDescClass}>
+        Build the symbolic right-hand side, differentiate to closed-form
+        <code class="font-mono text-xs">A</code>,
+        <code class="font-mono text-xs">B</code>, and inspect controllability analytically.
+      </p>
+      <p class={cardMetaClass}>SymPy</p>
     </a>
-    <a href="/tutorials/workflows/custom-templates" class={cardClass}>
-      <h3 class={cardTitleClass}>Custom Jinja Templates</h3>
-      <p class={cardDescClass}>Generate MATLAB, Fortran, C, or any format.</p>
+    <a href="/tutorials/workflows/casadi-perch" class={cardClass}>
+      <h3 class={cardTitleClass}>Nonlinear MPC with CasADi</h3>
+      <p class={cardDescClass}>
+        Drop the generated dynamics into a direct-transcription MPC and solve with IPOPT for an
+        aggressive fixed-wing maneuver.
+      </p>
+      <p class={cardMetaClass}>CasADi + IPOPT</p>
     </a>
-    <a href="/tutorials/workflows/fmu-export" class={cardClass}>
-      <h3 class={cardTitleClass}>FMU Export for MATLAB</h3>
-      <p class={cardDescClass}>Export FMUs and import into Simulink.</p>
+    <a href="/tutorials/workflows/symforce-ekf" class={cardClass}>
+      <h3 class={cardTitleClass}>On-Manifold EKF with SymForce</h3>
+      <p class={cardDescClass}>
+        Fuse IMU and GPS with an attitude estimator that lives on <em>SO(3)</em> rather than
+        Euler angles.
+      </p>
+      <p class={cardMetaClass}>SymForce</p>
     </a>
   </div>
 </TutorialLayout>

@@ -73,8 +73,10 @@ export class WasmStepper {
         return this;
     }
     /**
-     * Reset the simulation to initial conditions, reusing the solver mode
-     * chosen at construction.
+     * Reset the simulation to initial conditions. Uses the underlying
+     * stepper's in-place reset, which zeroes integrator state without
+     * re-lowering the DAE or re-factoring the Jacobian — orders of
+     * magnitude faster than reconstructing from scratch.
      */
     reset() {
         const ret = wasm.wasmstepper_reset(this.__wbg_ptr);

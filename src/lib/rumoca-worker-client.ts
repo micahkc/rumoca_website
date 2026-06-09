@@ -26,8 +26,12 @@ export class RumocaClient {
     });
 
     this.worker.addEventListener('message', (e: MessageEvent) => {
-      const { id, success, result, error } = e.data;
+      const { id, success, result, error, progress } = e.data;
       if (id == null) return;
+      // The new rumoca worker emits per-request progress events
+      // (`{id, progress: true, kind, phase, ...}`); ignore them — only the
+      // terminal `success`/`error` message should resolve the pending entry.
+      if (progress) return;
       const pending = this.pending.get(id);
       if (!pending) return;
       this.pending.delete(id);
@@ -52,9 +56,27 @@ export class RumocaClient {
     return this.request('workspaceCommand', 'rumoca.workspace.compile', { source, modelName });
   }
 
-  async renderTemplate(daeJson: string, template: string): Promise<string> {
+  /**
+   * Render a compiled DAE through a built-in target (e.g., "casadi", "sympy").
+   *
+   * The new rumoca API returns `{ ok: true, files: [{filename, content}, ...] }`.
+   * For tutorial display we flatten to a single string — the bare content if
+   * there's one file, or concatenated with `// --- filename ---` headers when
+   * multiple.
+   */
+  async renderTarget(daeJson: string, modelName: string, target: string): Promise<string> {
     await this.ready;
-    return this.request('workspaceCommand', 'rumoca.workspace.renderTemplate', { daeJson, template });
+    const result = await this.request(
+      'workspaceCommand',
+      'rumoca.workspace.renderTarget',
+      { daeJson, modelName, target, manifest: '', templates: '{}' },
+    );
+    const files: { filename: string; content: string }[] = result?.files ?? [];
+    if (files.length === 0) return '';
+    if (files.length === 1) return files[0].content;
+    return files
+      .map((f) => `// ─── ${f.filename} ───\n${f.content}`)
+      .join('\n\n');
   }
 
   async getVersion(): Promise<string> {
@@ -62,9 +84,10 @@ export class RumocaClient {
     return this.request('workspaceCommand', 'rumoca.workspace.getVersion', {});
   }
 
-  async getBuiltinTemplates(): Promise<string> {
+  /** Returns a JSON-encoded array of built-in target names (casadi, sympy, …). */
+  async getBuiltinTargets(): Promise<string> {
     await this.ready;
-    return this.request('workspaceCommand', 'rumoca.workspace.getBuiltinTemplates', {});
+    return this.request('workspaceCommand', 'rumoca.workspace.getBuiltinTargets', {});
   }
 
   async simulate(source: string, modelName = 'Model', tEnd = 1.0, dt = 0, solver = 'auto'): Promise<string> {

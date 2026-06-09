@@ -4,11 +4,20 @@
  * Key bindings are vehicle-specific to match the rumoca CLI demos
  * (examples/interactive/quadrotor/rum.acro.toml and rover/rum.toml).
  *
- *  Quadrotor / Fixed Wing:
+ *  Quadrotor:
  *    W / S        — throttle (integrator, ramp = 0.7/s, clamp [0,1])
  *    A / D        — yaw (±0.6 with decay)
  *    ↑ / ↓        — roll (±0.3 with decay)
  *    ← / →        — pitch (±0.3 with decay)
+ *    Space        — arm / disarm (requires throttle ≤ 0.05)
+ *    H            — toggle flight HUD
+ *    R            — reset
+ *
+ *  Fixed Wing (plane-style, matches the rumoca fixedwing rum.toml):
+ *    W / S        — throttle (integrator, ramp = 0.7/s, clamp [0,1])
+ *    ↑ / ↓        — pitch (nose up / down)
+ *    ← / →        — roll (turn left / right via ailerons)
+ *    A / D        — rudder (left / right)
  *    Space        — arm / disarm (requires throttle ≤ 0.05)
  *    H            — toggle flight HUD
  *    R            — reset
@@ -48,7 +57,6 @@ const ROLL_PITCH_KB_VALUE = 0.3;
 const YAW_KB_VALUE = 0.6;
 const STEERING_KB_VALUE = 1.0;
 const THROTTLE_RAMP_RATE = 0.7;
-const ARM_THROTTLE_THRESHOLD = 0.05;
 
 export class InputManager {
   rc: RCState = { throttle: 0, pitch: 0, roll: 0, yaw: 0 };
@@ -82,10 +90,14 @@ export class InputManager {
       if (e.code === 'KeyR') this.resetRequested = true;
       if (e.code === 'KeyH' && !e.repeat) this.hudVisible = !this.hudVisible;
       if (e.code === 'Space' && !e.repeat) {
-        // Match rumoca's arm precondition: throttle must be low to arm.
-        if (this.armed || this.rc.throttle <= ARM_THROTTLE_THRESHOLD) {
-          this.armed = !this.armed;
+        // rumoca's TOML requires throttle ≤ 0.05 to arm; we drop that
+        // interlock for the website sim so the toggle is never silently
+        // ignored. Auto-zero throttle on arm to mirror the safe outcome.
+        if (!this.armed) {
+          this.rc.throttle = 0;
+          this.kbThrottleInput = 0;
         }
+        this.armed = !this.armed;
       }
       e.preventDefault();
     };
@@ -147,9 +159,8 @@ export class InputManager {
     if (gp.buttons[1]?.pressed) this.zeroSticks();
     const startPressed = gp.buttons[9]?.pressed ?? false;
     if (startPressed && !this.prevStartPressed) {
-      if (this.armed || this.rc.throttle <= ARM_THROTTLE_THRESHOLD) {
-        this.armed = !this.armed;
-      }
+      if (!this.armed) this.rc.throttle = 0;
+      this.armed = !this.armed;
     }
     this.prevStartPressed = startPressed;
     return true;
@@ -191,15 +202,28 @@ export class InputManager {
       return;
     }
 
-    // Quadrotor / fixed wing — match rum.acro.toml.
+    // W / S throttle integrator (shared by quadrotor and fixed wing).
     if (this.keys['KeyW']) this.kbThrottleInput = 1.0;
     if (this.keys['KeyS']) this.kbThrottleInput = -1.0;
-    if (this.keys['KeyA']) this.kbYaw = YAW_KB_VALUE;
-    if (this.keys['KeyD']) this.kbYaw = -YAW_KB_VALUE;
-    if (this.keys['ArrowUp']) this.kbRoll = ROLL_PITCH_KB_VALUE;
-    if (this.keys['ArrowDown']) this.kbRoll = -ROLL_PITCH_KB_VALUE;
-    if (this.keys['ArrowLeft']) this.kbPitch = ROLL_PITCH_KB_VALUE;
-    if (this.keys['ArrowRight']) this.kbPitch = -ROLL_PITCH_KB_VALUE;
+
+    if (this.profile === 'fixedwing') {
+      // Plane-style (joystick sense): ↑ pitches nose DOWN, ↓ pitches nose up;
+      //   ← / → roll (turn left / right via ailerons), A / D rudder (left/right).
+      if (this.keys['ArrowUp']) this.kbPitch = -ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowDown']) this.kbPitch = ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowLeft']) this.kbRoll = -ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowRight']) this.kbRoll = ROLL_PITCH_KB_VALUE;
+      if (this.keys['KeyA']) this.kbYaw = -YAW_KB_VALUE;
+      if (this.keys['KeyD']) this.kbYaw = YAW_KB_VALUE;
+    } else {
+      // Quadrotor — match rum.acro.toml.
+      if (this.keys['KeyA']) this.kbYaw = YAW_KB_VALUE;
+      if (this.keys['KeyD']) this.kbYaw = -YAW_KB_VALUE;
+      if (this.keys['ArrowUp']) this.kbRoll = ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowDown']) this.kbRoll = -ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowLeft']) this.kbPitch = ROLL_PITCH_KB_VALUE;
+      if (this.keys['ArrowRight']) this.kbPitch = -ROLL_PITCH_KB_VALUE;
+    }
 
     this.rc.throttle = Math.max(
       0,

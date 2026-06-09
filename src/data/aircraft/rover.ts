@@ -14,6 +14,7 @@ import type { SimulationSource } from '../../lib/simulation-source';
 //   wheel_rpm          — rear-wheel angular velocity [rad/s]
 //   front_wheel_yaw    — front steering angle [rad]
 
+// "Buggy" by Nick Slough (CC-BY 3.0), via poly.pizza (https://poly.pizza/m/eZ_13w7qZh7)
 const JEEP_URL = 'https://static.poly.pizza/8036e526-b08a-4d8c-a4b3-0214097cbc18.glb';
 const JEEP_SCALE = 0.30;
 const WHEEL_NODES = {

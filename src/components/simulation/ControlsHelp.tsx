@@ -81,6 +81,25 @@ function KeyboardKeys({ profile }: { profile: InputProfile }) {
       </>
     );
   }
+  if (profile === 'fixedwing') {
+    return (
+      <>
+        <span style={key}>W / S</span> <span style={label}>Throttle</span>
+        <br />
+        <span style={key}>↑ / ↓</span> <span style={label}>Pitch</span>
+        <br />
+        <span style={key}>← / →</span> <span style={label}>Roll</span>
+        <br />
+        <span style={key}>A / D</span> <span style={label}>Rudder</span>
+        <br />
+        <span style={key}>Space</span> <span style={label}>Arm / Disarm</span>
+        <br />
+        <span style={key}>H</span> <span style={label}>HUD view (chase)</span>
+        <br />
+        <span style={key}>R</span> <span style={label}>Reset</span>
+      </>
+    );
+  }
   return (
     <>
       <span style={key}>W / S</span> <span style={label}>Throttle</span>
@@ -93,7 +112,7 @@ function KeyboardKeys({ profile }: { profile: InputProfile }) {
       <br />
       <span style={key}>Space</span> <span style={label}>Arm / Disarm</span>
       <br />
-      <span style={key}>H</span> <span style={label}>Toggle HUD</span>
+      <span style={key}>H</span> <span style={label}>HUD view (chase)</span>
       <br />
       <span style={key}>R</span> <span style={label}>Reset</span>
     </>
