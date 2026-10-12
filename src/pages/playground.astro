@@ -1,25 +1,30 @@
 ---
-// Embeds rumoca's editors/wasm playground (Monaco editor + diagnostics +
-// command palette + WASM compile). The page itself is just an iframe;
-// scripts/sync-wasm.sh mirrors editors/wasm/ into public/playground/ on
-// every sync, and the deploy workflow does the same in CI — so this page
-// auto-updates with each rumoca release.
-//
-// The previous textarea-based PlaygroundApp.tsx is kept under
-// src/components/playground/ for now in case we want to fall back, but it
-// is no longer wired in.
+// Launch page for rumoca's WASM playground. The playground itself is hosted
+// by CogniPilot/rumoca's GitHub Pages deploy (rebuilt on every release), so
+// we link out to it rather than embedding a mirrored copy that can go stale.
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const playgroundUrl = 'https://cognipilot.github.io/rumoca/';
 ---
 
 <BaseLayout
   title="Playground - Rumoca"
-  description="Write Modelica in a Monaco editor with live diagnostics and compile in your browser via WebAssembly."
-  fullScreen={true}
+  description="Write Modelica in a Monaco editor with live diagnostics, then compile and simulate in your browser via WebAssembly."
 >
-  <iframe
-    src="/playground/app/index.html"
-    title="Rumoca Modelica Playground"
-    allow="cross-origin-isolated"
-    style="width: 100%; height: 100%; border: 0; display: block;"
-  ></iframe>
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+    <h1 class="text-4xl font-bold text-text mb-10">Rumoca Playground</h1>
+    <a
+      href={playgroundUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-white text-lg font-medium hover:bg-accent-hover transition-colors"
+    >
+      Open Playground &rarr;
+    </a>
+    <p class="text-sm text-text-muted mt-6">
+      Opens the latest release build at
+      <a href={playgroundUrl} target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">cognipilot.github.io/rumoca</a>
+      in a new tab.
+    </p>
+  </div>
 </BaseLayout>

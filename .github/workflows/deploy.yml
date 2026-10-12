@@ -14,8 +14,6 @@ name: Deploy to GitHub Pages
 #   pkg/                  WASM blob + JS bindings (rumoca_bg.wasm, rumoca.js,
 #                         rumoca_worker.js, parse_worker.js)
 #   editors/wasm/         coi-serviceworker.js, rumoca.png
-#   user-guide/           mdBook output, served at /user-guide
-#   dev-guide/            mdBook output, served at /dev-guide
 
 on:
   push:
@@ -105,25 +103,6 @@ jobs:
           else
             echo "::warning::Tarball missing editors/wasm/ — /playground will be empty"
           fi
-
-      - name: Copy docs markdown into src/content/
-        if: steps.rumoca.outputs.tag != ''
-        run: |
-          # Astro renders these natively at build time via the content
-          # collections defined in src/content.config.ts.
-          for guide in user-guide dev-guide; do
-            src="$RUMOCA_DIR/docs/$guide/src"
-            dst="src/content/$guide"
-            if [ -d "$src" ]; then
-              rm -rf "$dst"
-              mkdir -p "$dst"
-              ( cd "$src" && find . -name '*.md' -print0 | tar --null -cf - --files-from - ) | \
-                ( cd "$dst" && tar -xf - )
-              echo "  ✓ $guide markdown → $dst"
-            else
-              echo "::warning::Tarball missing docs/$guide/src — /$guide will be empty"
-            fi
-          done
 
       - name: Install dependencies
         run: npm ci

@@ -223,31 +223,6 @@ else
     errors=$((errors+1))
 fi
 
-# --- Docs (markdown source for Astro content collections) ------------------
-#
-# Copy markdown sources from rumoca's docs/{user,dev}-guide/src/ into our
-# src/content/ collections. Astro renders these natively at build time —
-# no mdbook needed, no theme mismatch, full integration with site styling.
-
-sync_docs_collection() {
-    local src=$1 dst=$2 name=$3
-    if [ ! -d "$src" ]; then
-        echo "  ⚠ $name source missing: $src (skip)"
-        return
-    fi
-    rm -rf "$dst"
-    mkdir -p "$dst"
-    # Preserve directory structure; only .md files.
-    (cd "$src" && find . -name '*.md' -print0 | tar --null -cf - --files-from -) | \
-        (cd "$dst" && tar -xf -)
-    local count
-    count=$(find "$dst" -name '*.md' | wc -l)
-    echo "  ✓ $name → ${dst#$PROJECT_DIR/} ($count file(s))"
-}
-
-sync_docs_collection "$RUMOCA_DIR/docs/user-guide/src" "$PROJECT_DIR/src/content/user-guide" "user-guide markdown"
-sync_docs_collection "$RUMOCA_DIR/docs/dev-guide/src"  "$PROJECT_DIR/src/content/dev-guide"  "dev-guide markdown"
-
 # --- Playground (Monaco-based Modelica editor) -----------------------------
 #
 # Mirror editors/wasm/ → public/playground/ minus the dev-only node_modules
