@@ -1,23 +1,31 @@
 ---
+// Launch page for rumoca's user and developer guides. Both mdBooks are
+// published by CogniPilot/rumoca's GitHub Pages deploy (rebuilt on every
+// release), so we link out to them rather than mirroring copies that go stale.
 import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const userGuideUrl = 'https://cognipilot.github.io/rumoca/user-guide/';
+const devGuideUrl = 'https://cognipilot.github.io/rumoca/dev-guide/';
 ---
 
 <BaseLayout
   title="Documentation - Rumoca"
-  description="Rumoca handbook and internals — reference docs built from the rumoca repository."
+  description="Rumoca user and developer guides, published by the rumoca repository."
 >
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
     <div class="mb-12">
       <h1 class="text-4xl font-bold text-text mb-4">Documentation</h1>
       <p class="text-text-muted text-lg leading-relaxed max-w-3xl">
-        Reference documentation built from the <a href="https://github.com/CogniPilot/rumoca" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent">rumoca repository</a>.
+        Official guides published by the <a href="https://github.com/CogniPilot/rumoca" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent">rumoca repository</a>.
         For step-by-step lessons that run in your browser, see the <a href="/tutorials" class="text-teal hover:text-accent">Tutorials</a>.
       </p>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-6">
       <a
-        href="/user-guide/"
+        href={userGuideUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         class="group p-6 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors block"
       >
         <div class="flex items-center gap-3 mb-3">
@@ -35,7 +43,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </a>
 
       <a
-        href="/dev-guide/"
+        href={devGuideUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         class="group p-6 rounded-xl bg-surface border border-border hover:border-accent/40 transition-colors block"
       >
         <div class="flex items-center gap-3 mb-3">
@@ -54,7 +64,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
 
     <p class="mt-12 text-sm text-text-muted">
-      Built from the rumoca repository on each release. Both guides are rendered natively by this site, so they share the same theme, sidebar, and search as everything else here. To refresh locally, run <code class="font-mono text-xs bg-surface px-2 py-0.5 rounded border border-border">npm run sync-wasm</code>.
+      Both guides open the latest release build at
+      <a href="https://cognipilot.github.io/rumoca/" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent">cognipilot.github.io/rumoca</a>
+      in a new tab.
     </p>
   </div>
 </BaseLayout>
