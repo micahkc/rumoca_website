@@ -1,10 +1,43 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Paste the Microsoft Teams meeting link here. Leave empty to show a placeholder.
+const teamsUrl = 'https://teams.microsoft.com/meet/260768608041385?p=qJE9naNhVFJDhjYGby';
+
+const codespaceUrl = 'https://codespaces.new/CogniPilot/rumoca_workshop_amc2026?quickstart=1';
+const repoUrl = 'https://github.com/CogniPilot/rumoca_workshop_amc2026';
+const docsUrl = `${repoUrl}/blob/main/docs`;
+
+const agenda = [
+  { time: '10:00 – 10:10', title: 'Welcome & open experiment challenge', detail: 'Introductions, the core exercises, and the optional challenge: apply Rumoca to a question you care about.' },
+  { time: '10:10 – 10:20', title: 'Why Rumoca? One model, many questions', detail: 'How declared Modelica equations travel through AST, Flat, DAE and Solve IRs into JAX, CasADi and other targets.' },
+  { time: '10:20 – 10:30', title: 'Browser plot & choose your setup route', detail: 'Zero-install run in the playground, then pick a route: Codespaces, local Dev Container, or native uv.' },
+  { time: '10:30 – 10:45', title: 'Simulation setup & the live user guide', detail: 'Fly the user guide’s quadrotor, read the scenario TOML, drive a Three.js scene, and explore the NACA airfoil flow.' },
+  { time: '10:45 – 11:00', title: 'Simulate a planar quadrotor', detail: 'Inspect Quadrotor.mo and make your first engineering change: add quadratic drag and compare distance flown.' },
+  { time: '11:00 – 11:10', title: 'Break', detail: '' },
+  { time: '11:10 – 11:50', title: 'Fit drag from noisy data with JAX', detail: 'Differentiate the prediction error through Rumoca’s JAX dynamics, fit two coefficients, and test on a held-out flight.' },
+  { time: '11:50 – 12:00', title: 'Custom targets: Lean & Torch', detail: 'Write a Jinja template, generate Lean-checked equations, and learn a policy through a generated Torch model.' },
+  { time: '12:00 – 12:10', title: 'Break', detail: '' },
+  { time: '12:10 – 12:40', title: 'Plan a trajectory with CasADi', detail: 'Compile the same model to CasADi and move between hovers while respecting thrust, torque, pitch and altitude limits.' },
+  { time: '12:40 – 12:50', title: 'Beyond the core', detail: 'PURT pylon racing, FastDyn firmware-in-the-loop, fixed-wing workbench, motion-capture identification, SLAM Lab, and the community.' },
+  { time: '12:50 – 13:00', title: 'Challenge demos & wrap-up', detail: 'Up to five 45-second demos, an audience vote for a CogniPilot stocking cap, and how to join the research community.' },
+];
+
+const resources = [
+  { label: 'Participant guide', href: `${docsUrl}/WORKSHOP.md`, desc: 'Step-by-step worksheet, commands and expected results' },
+  { label: 'Slides (PDF)', href: `${repoUrl}/blob/main/slides/workshop.pdf`, desc: 'The full workshop deck' },
+  { label: 'Local setup', href: `${docsUrl}/LOCAL_SETUP.md`, desc: 'Dev Container or native uv install' },
+  { label: 'Troubleshooting', href: `${docsUrl}/TROUBLESHOOTING.md`, desc: 'Recovery steps if setup goes wrong' },
+  { label: 'Challenge rules', href: `${docsUrl}/CHALLENGE.md`, desc: 'Open experiment challenge, entries close 12:40' },
+  { label: 'Browser apps', href: `${docsUrl}/BROWSER_APPS.md`, desc: 'Fixed-wing, mocap identification and SLAM experiments' },
+  { label: 'Custom targets', href: `${docsUrl}/BACKENDS.md`, desc: 'Write your own Rumoca code-generation target' },
+  { label: 'Playground', href: 'https://rumoca.cognipilot.org/playground/', desc: 'Zero-install modeling and simulation in the browser' },
+];
 ---
 
 <BaseLayout
   title="Workshop - Rumoca"
-  description="Hands-On with Rumoca: From Modelica Source to Simulation and Multiple Algebraic Backends in VS Code. A tutorial at the American Modelica & FMI Conference 2026 in Atlanta, Georgia."
+  description="Hands-On with Rumoca: one Modelica model taken through simulation, JAX parameter fitting, and CasADi trajectory optimization. A tutorial at the American Modelica & FMI Conference 2026 in Atlanta, Georgia."
 >
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
     <p class="text-sm font-semibold uppercase tracking-wider text-accent mb-4">
@@ -14,7 +47,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       Hands-On with Rumoca: From Modelica Source to Simulation and Multiple Algebraic Backends in VS&nbsp;Code
     </h1>
 
-    <div class="flex flex-wrap gap-x-8 gap-y-3 text-text-muted mb-12">
+    <div class="flex flex-wrap gap-x-8 gap-y-3 text-text-muted mb-4">
       <div class="flex items-center gap-2">
         <svg class="w-5 h-5 text-teal shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -29,18 +62,120 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <span>Georgia Tech, Atlanta, Georgia</span>
       </div>
     </div>
+    <p class="text-text-muted mb-12">
+      <span class="text-text font-medium">James Goppert</span> &middot; Managing Director, PURT; Research Assistant Professor<br />
+      <span class="text-text font-medium">Micah Condie</span> &middot; PhD student, School of Aeronautics and Astronautics<br />
+      Purdue University
+    </p>
+
+    <section class="mb-16 rounded-xl border border-border bg-surface p-6 sm:p-8">
+      <h2 class="text-2xl font-semibold text-text mb-6">Join &amp; Get Started</h2>
+      <div class="flex flex-col sm:flex-row gap-8 items-start">
+        <a href={codespaceUrl} target="_blank" rel="noopener noreferrer" class="shrink-0 self-center sm:self-start">
+          <img
+            src="/images/workshop/repo-qr.png"
+            alt="QR code: create the core workshop Codespace"
+            width="160"
+            height="160"
+            class="w-40 h-40 rounded-lg bg-white p-2 [image-rendering:pixelated]"
+          />
+        </a>
+        <div class="space-y-5 flex-1">
+          <div>
+            <p class="text-text font-medium mb-2">1. Open the workshop Codespace</p>
+            <a
+              href={codespaceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+            >
+              Create Codespace &rarr;
+            </a>
+            <p class="text-sm text-text-muted mt-2">
+              Scan or click. Requires a GitHub account with Codespaces allowance. Prefer local?
+              See <a href={`${docsUrl}/LOCAL_SETUP.md`} target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">local setup</a>
+              or browse the <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">workshop repository</a>.
+            </p>
+          </div>
+          <div>
+            <p class="text-text font-medium mb-2">2. Join remotely on Microsoft Teams</p>
+            {teamsUrl ? (
+              <a
+                href={teamsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-accent text-accent font-medium hover:bg-accent hover:text-white transition-colors"
+              >
+                Join Teams Meeting &rarr;
+              </a>
+            ) : (
+              <p class="text-sm text-text-muted italic">The Teams meeting link will be posted here.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="space-y-6 mb-16">
       <h2 class="text-2xl font-semibold text-text">About the Workshop</h2>
       <p class="text-text-muted leading-relaxed">
-        This tutorial is a hands-on introduction to <span class="text-text font-medium">Rumoca</span>, a Rust-native Modelica compiler that turns a single Modelica model into a universal algebraic frontend for downstream tools.
+        How many versions of the same physics do you maintain? Independently written simulation, fitting and control models drift apart.
+        <span class="text-text font-medium">Rumoca</span> is an open, Rust-native Modelica compiler that lets one declared model travel into simulation, identification, optimization and verification without silently becoming a different model.
       </p>
       <p class="text-text-muted leading-relaxed">
-        Working through a set of pre-vetted example models, attendees will use the Rumoca VS Code extension to edit a model, run it, and view the simulation directly in the editor, with live diagnostics and an editable 3D view of the running model. From the same source, participants will then generate exports across several backends, including CasADi, SymPy, JAX, and FMI. These artifacts will then be loaded in their own environment, for example a Jupyter notebook, to inspect them and demonstrate utility.
+        In this tutorial you take a single small Modelica model, a planar quadrotor, through three steps: <span class="text-text font-medium">simulate it</span>, <span class="text-text font-medium">fit its drag with JAX</span>, then <span class="text-text font-medium">plan a constrained trajectory with CasADi</span>. All from the same source:
+      </p>
+      <pre class="rounded-lg bg-surface border border-border p-4 text-sm overflow-x-auto"><code>import rumoca as rum
+model = rum.Session().load("models/Quadrotor.mo", model="Quadrotor")
+jax_model = model.to_jax()
+casadi_model = model.to_casadi()</code></pre>
+      <p class="text-text-muted leading-relaxed">
+        Along the way you'll edit and run models in VS Code and the browser, configure scenarios with TOML, drive a Three.js visualization, and write a custom code-generation target that emits Lean-checked equations and a differentiable Torch model.
       </p>
       <p class="text-text-muted leading-relaxed">
-        No prior Rumoca experience needed; basic Modelica familiarity is helpful, but not required.
+        Any modeling domain is welcome and no aerospace background is needed. Basic Modelica familiarity helps but isn't required.
       </p>
+    </section>
+
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold text-text mb-6">Agenda</h2>
+      <ol class="border-l border-border">
+        {agenda.map((item) => (
+          <li class="pl-6 pb-5 relative">
+            <span class="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-teal"></span>
+            <p class="text-sm font-mono text-text-muted">{item.time}</p>
+            <p class={`font-medium ${item.detail ? 'text-text' : 'text-text-muted italic'}`}>{item.title}</p>
+            {item.detail && <p class="text-text-muted text-sm leading-relaxed mt-1">{item.detail}</p>}
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="space-y-4 mb-16">
+      <h2 class="text-2xl font-semibold text-text">Open Experiment Challenge</h2>
+      <p class="text-text-muted leading-relaxed">
+        During downtime, apply Rumoca to a problem you care about. One change to an existing model, controller or simulator is enough. Entries close at 12:40; up to five experiments are demoed at 12:50 (45 seconds each), and the audience favorite wins a CogniPilot stocking cap.
+        See the <a href={`${docsUrl}/CHALLENGE.md`} target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">challenge rules</a>.
+      </p>
+    </section>
+
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold text-text mb-6">Materials</h2>
+      <ul class="grid sm:grid-cols-2 gap-4">
+        {resources.map((r) => (
+          <li>
+            <a
+              href={r.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="block h-full rounded-lg border border-border p-4 hover:border-accent transition-colors"
+            >
+              <p class="text-text font-medium">{r.label} &rarr;</p>
+              <p class="text-sm text-text-muted mt-1">{r.desc}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
     </section>
 
     <section class="space-y-6 mb-16">
@@ -51,15 +186,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         rel="noopener noreferrer"
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
       >
-        Conference Page &amp; Registration &rarr;
+        Conference Page &rarr;
       </a>
-      <p class="text-text-muted leading-relaxed italic">
-        Workshop materials will be added at a later date.
-      </p>
     </section>
 
     <section class="space-y-4">
-      <h2 class="text-2xl font-semibold text-text">Questions?</h2>
+      <h2 class="text-2xl font-semibold text-text">Join the Community</h2>
+      <p class="text-text-muted leading-relaxed">
+        Bring a model or a question from your own domain, contribute a validation case, model library or compiler improvement, or talk with us about research collaboration.
+        The upcoming <a href="https://pylon-racing.geddes.rcac.purdue.edu/" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">PURT pylon racing competition</a> will also leverage Rumoca.
+      </p>
       <ul class="space-y-2 text-text-muted">
         <li>
           Rumoca on GitHub: <a href="https://github.com/CogniPilot/rumoca" target="_blank" rel="noopener noreferrer" class="text-teal hover:text-accent underline">github.com/CogniPilot/rumoca</a>
